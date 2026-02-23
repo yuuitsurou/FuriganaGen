@@ -2,12 +2,27 @@ Attribute VB_Name = "FuriganaGen.bas"
 '/////////////////////////////////////////////////////
 '// FuriganaGen.bas
 '// 指定された Word の文書からルビを振った文書を作成する
-'// API を使用する作成と Word の機能を使用する作成
+'// API を使用する作成
+'// 生成AI でルビテキスト(青空文庫形式)を作成し、それを利用して作成
+'// Word の機能を使用する作成
+'//
+'// 青空文庫形式のルビ
+'// https://www.aozora.gr.jp/aozora-manual/index-input.html
+'// ルビは、ルビの付く文字列のあとに、「《》」でくくって入力します。（学術記号の「≪≫」と混同しやすいので注意してください。）
+'// ルビの付く文字列がはじまる前には、「｜」を入れます。
 '//
 '// このプログラムで使用している Yahoo の API
 '// Web Services by Yahoo! JAPAN （https://developer.yahoo.co.jp/sitemap/）
 '//
 '// このプログラムは以下の記事を参考にした
+'// Wordの文章にルビ（ふりがな）を自動で振れるマクロ
+'// https://kagakucafe.com/2020092311700.html
+'// Wordの文章にルビ（ふりがな）を自動で振れるマクロ の補足
+'// https://kagakucafe.com/2021071316030.html
+'// Wordでのルビ振りを一括でできるようにした話
+'// https://qiita.com/enoz_jp/items/0a746cd1c0c021599a1d
+'// Wordでのルビ振りを一括でできるようにした話2
+'// https://qiita.com/enoz_jp/items/915ee4db96ae2097fe02
 '//
 '// 下記のモジュールが必要
 '// JsonConverter.bas (https://github.com/VBA-tools/VBA-JSON)
@@ -23,9 +38,11 @@ Attribute VB_Name = "FuriganaGen.bas"
 '// GetWordFile()
 '// GetNewFileName()
 '// FuriganaGenByRuby()
+'// IsContainKanji()
 '//
 '// 履歴:
 '// 2026/02/20 作成開始
+'// 2026/02/23 Ver.0.1
 Option Explicit
 
 Const G_API_GRADE = 1
@@ -50,6 +67,11 @@ Public Sub FuriganaGen()
    If Len(fn) <= 0 Then Exit Sub 
    target = Documents.Open(fn)
    allText = target.Range.Text
+   token = InputBox("APIに渡すトークンを入力して下さい。")
+   If Len(token) <= 0 Then
+      Call MsgBox("トークンが入力されませんでした。")
+      Exit Sub
+   End If 
    json = JsonConverter.ParseJson(GetApiResult(allText, token))
 
    Dim w As Object
@@ -84,6 +106,7 @@ Public Sub FuriganaGen()
    fn = GetNewFileName(fn, "ルビ付")
    If Len(fn) > 0 Then 
       Call target.SaveAs2(fn)
+      Call MsgBox("ルビ付ファイルを作成しました。" & vbCrLf & "ファイル: (" & fn & ")")
    Else
       Call MsgBox("ルビ付のファイルが作成できませんでした。" & vbCrLf & "ルビ付ファイルと同名のファイルが既に存在します。")
    End If 
@@ -150,7 +173,7 @@ Private Function IsKanji(ByVal s As String) As Boolean
    On Error GoTo IsKanji_Error
 
    Dim code As Long
-   code = AscW(text)
+   code = AscW(s)
    If code < 0 Then
       code = code + 65536
    End If
@@ -285,6 +308,7 @@ Public Sub FuriganaByAozora()
    fn = GetNewFileName(fn, "ルビ付")
    If Len(fn) > 0 Then 
       Call target.SaveAs2(fn)
+      Call MsgBox("ルビ付ファイルを作成しました。" & vbCrLf & "ファイル: (" & fn & ")")
    Else
       Call MsgBox("ルビ付のファイルが作成できませんでした。" & vbCrLf & "ルビ付ファイルと同名のファイルが既に存在します。")
    End If 
@@ -382,9 +406,55 @@ End Function
 '/////////////////////////////////////////////////////
 '// FuriganaGenByRuby()
 '// 指定された Word の文書に、Word の機能でルビを付ける。
+'// Word のバグのため、ルビが振られず、無限ループになってしまう漢字がある。
+'// その場合は、その漢字に先にルビを振っておいてから実行する。
 Public Sub FuriganaGenByRuby()
 
    On Error GoTo FuriganaGenByRuby_Error
+
+   Dim fn As String 
+   fn = GetWordFile()
+   If Len(fn) <= 0 Then Exit Sub
+   Dim target As Document
+   target = Documents.Open(fn)
+   Dim rng As Range
+   Dim c As Range
+   Dim startPos As Long
+   Dim endPos As Long
+   For Each rng In target.Range.Words
+      'ルビが振られているか
+      If rng.Fields.Count >= 1 Then Next
+      '漢字が含まれているか
+      If IsContainKanji(rng.Text, False) Then
+	 For ii = 0 To rng.Characters.Count - 1
+	    If IsKanji(rng.Characters(ii).Range.Text) Then
+	       startPos = ii
+	       endPos = ii
+	       ii = ii + 1
+	       Do While IsKanji(rng.Characters(ii).Range.Text)
+	          endPos = ii
+	          ii = ii + 1
+	          If ii = rng.Characters.Count Then Exit Do
+	       Loop
+	       With rng.Characters
+		  .Start = startPos
+		  .End = endPos
+		  .Select
+		  Application.Dialogs(wdDialogPhoneticGuide).Show 1
+	       End With 
+	    End If
+	 Next 
+      End If 
+   Next
+   
+   fn = GetNewFileName(fn, "ルビ付")
+   If Len(fn) > 0 Then 
+      Call target.SaveAs2(fn)
+      Call MsgBox("ルビ付ファイルを作成しました。" & vbCrLf & "ファイル: (" & fn & ")")
+   Else
+      Call MsgBox("ルビ付のファイルが作成できませんでした。" & vbCrLf & "ルビ付ファイルと同名のファイルが既に存在します。")
+   End If 
+   target.Close
 
    Exit Sub
 FuriganaGenByRuby_Error:
@@ -392,4 +462,38 @@ FuriganaGenByRuby_Error:
 	       & "FuriganaGenByRuby: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
    Err.Clear
+   
 End Sub
+
+'/////////////////////////////////////////////////////
+'// IsContainKanji(s, allKanji)
+'// 渡された文字列に漢字が含まれているかどうかの検査
+'// 引数:
+'// s: String/: 検査対象の文字列
+'// allKanji: Boolean: 文字列全部が漢字かどうかを判定するフラグ True = 全部を判定 / False = 一文字でも含まれているかを判定
+'// 戻り値:
+'// 検査結果 True = 含まれている / False = 含まれていない
+Private Function IsContainKanji(ByVal s As String, ByVal allKanji As Boolean) As Boolean
+
+   On Error GoTo IsContainKanji_Error
+
+   IsContainKanji = False
+
+   Dim ii As Long
+   For ii = 1 To Len(s)
+      IsContainKanji = IsKanji(Mid(s, ii, 1)
+      If allKanji Then
+	 If Not IsContainKanji Then Exit For
+      Else
+	 If IsContainKanji Then Exit For
+      End If
+   Next
+   
+   Exit Function
+IsContainKanji_Error:
+   Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+	       & "IsContainKanji: " & Err.Number & vbCrLf _
+	       & "( " & Err.Description & " )")
+   Err.Clear
+   
+End Function
