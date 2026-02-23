@@ -1,4 +1,4 @@
-Attribute VB_Name = "FuriganaGenerator"
+Attribute VB_Name = "FuriganaGeneratorModule"
 '/////////////////////////////////////////////////////
 '// FuriganaGen.bas
 '// 指定された Word の文書からルビを振った文書を作成する
@@ -428,8 +428,13 @@ Public Sub FuriganaGenByRuby()
    For Each rng In target.Range.Words
       'ルビが振られているか
       If rng.Fields.Count < 1 Then 
-	 '漢字が含まれているか
-	 If IsContainKanji(rng.Text, False) Then
+	 '全て漢字か
+	 If IsContainKanji(rng.Text, True) Then
+	    rng.Select
+	    Application.Dialogs(wdDialogPhoneticGuide).Show 1
+	 Else
+	    If IsContainKanji(rng.Text, False) Then
+	    End If 
 	    For ii = 1 To rng.Characters.Count
 	       If IsKanji(rng.Characters(ii).Text) Then
 		  startPos = ii
