@@ -63,15 +63,18 @@ Public Sub FuriganaGen()
    Dim allText As String
    Dim json As Object
 
+   'ルビを付ける文書を開く
    fn = GetWordFile()
    If Len(fn) <= 0 Then Exit Sub 
    Set target = Documents.Open(fn)
+   '対象の文書の全文を API に渡す
    allText = target.Range.Text
    token = InputBox("APIに渡すトークンを入力して下さい。")
    If Len(token) <= 0 Then
       Call MsgBox("トークンが入力されませんでした。")
       Exit Sub
-   End If 
+   End If
+   'API からのレスポンスをパース
    Set json = JsonConverter.ParseJson(GetApiResult(allText, token))
 
    Dim w As Object
@@ -97,12 +100,15 @@ Public Sub FuriganaGen()
 	 End If
       End If
    Next
-
+   'パースした API のレスポンスを元に対象の文書にルビを付ける
    If SetRuby(target, rs) Then
-   Else 
+      '成功
+   Else
+      '失敗
       Exit Sub 
    End If 
-   
+
+   'ルビを付けた文書を新しい文書として保存
    fn = GetNewFileName(fn, "ルビ付")
    If Len(fn) > 0 Then 
       Call target.SaveAs2(fn)
@@ -154,6 +160,7 @@ Private Function GetApiResult(ByVal s As String, ByVal token As String) As Strin
    
    Exit Function
 GetApiResult_Error:
+   GetApiResult = ""
    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
 	       & "GetApiResult: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
@@ -171,7 +178,8 @@ End Function
 Private Function IsKanji(ByVal s As String) As Boolean
 
    On Error GoTo IsKanji_Error
-
+   
+   IsKanji = False
    Dim code As Long
    code = AscW(s)
    If code < 0 Then
@@ -181,10 +189,10 @@ Private Function IsKanji(ByVal s As String) As Boolean
    
    Exit Function
 IsKanji_Error:
+   IsKanji = False 
    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
 	       & "IsKanji: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
-   Err.Clear
    
 End Function
 
@@ -210,14 +218,19 @@ Private Function SetRuby(ByRef target As Document, ByRef rubyList As Collection)
    Dim ruby As Variant
    Dim rng As Range
    total = rubyList.Count
+   'ルビのリストを最後から処理する
    For ii = total To 1 Step -1
+      'ルビを付ける文字列 = 0 / ルビ = 1 の配列を取り出す
       ruby = rubyList(ii)
+      '対象の文書を文末から検索
       Set rng = target.Range
       With rng.Find
 	 .Forward = False 
 	 .Wrap = wdFindContinue
 	 .Execute FindText:=ruby(0)
 	 If .Found Then
+	    'マッチするとレンジの範囲がマッチした部分になるので、
+	    'そのレンジにルビを付ける
 	    rng.PhoneticGuide text:=ruby(1)  ', Alignment:=wdPhoneticGuideAlignmentCenter, Raise:=10, FontSize:=5 ' ルビ部分
 	 Else
 	    SetRuby = False
@@ -244,11 +257,11 @@ End Function
 Public Sub FuriganaByAozora()
    
    On Error GoTo FuriganaByAozora_Error
-
+   '対象の文書のパスを取得
    Dim fn As String
    fn = GetWordFile()
    If Len(fn) <= 0 Then Exit Sub
-   
+   'ルビ付文書を開いて読み込み
    Dim initialPath As String
    initialPath = Left(fn, Len(fn) - InstrRev(fn, "\") + 1)
    Dim rFn As String
@@ -273,7 +286,6 @@ Public Sub FuriganaByAozora()
       Call MsgBox("ルビ付のテキスト文書を読み込むことができませんでした。")
       Exit Sub
    End If
-
    Dim rgx As Object
    Set rgx = CreateObject("VBScript.RegExp")
    With rgx
@@ -282,9 +294,14 @@ Public Sub FuriganaByAozora()
       .IgnoreCase = False
       .Pattern = "｜(.*?)《(.*?)》" ' 青空文庫形式のルビを探す正規表現
    End With
-   If Not rgx.Test(s) Then
+   If rgx.Test(s) Then
+      '成功
+   Else
+      '失敗
+      Call MsgBox("ルビ付のテキスト文書(青空文庫形式)として指定されたファイルからルビを取り出すことができません。" & vbCrLf & "ファイル: " & rfn) 
       Exit Sub
-   End If 
+   End If
+   '正規表現による検索結果からルビのリストを作成
    Dim ms As Object
    Dim ii As Long
    Dim m As Variant 
@@ -300,14 +317,17 @@ Public Sub FuriganaByAozora()
 	 rs.Add Array(surface, furigana)
       End If 
    Next
-
+   'ルビのリストから対象の文書にルビを付ける
    Dim target As Document
    Set target = Documents.Open(fn)
    If SetRuby(target, rs) Then
-   Else 
+      '成功
+   Else
+      '失敗
       Exit Sub 
    End If 
 
+   'ルビを付けた文書を新しい文書として保存
    fn = GetNewFileName(fn, "ルビ付")
    If Len(fn) > 0 Then 
       Call target.SaveAs2(fn)
@@ -326,6 +346,7 @@ FuriganaByAozora_Error:
    Err.Clear
    
 End Sub
+
 '/////////////////////////////////////////////////////
 '// GetWordFile()
 '// ルビを付ける Word 文書を選択する関数
@@ -348,12 +369,14 @@ Private Function GetWordFile() As String
       If .Show Then
 	 GetWordFile = .SelectedItems(1)
       Else
+	 GetWordFile = ""
 	 Call MsgBox("キャンセルされました。")
       End if
    End With 
    
    Exit Function
 GetWordFile_Error:
+   GetWordFile = ""
    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
 	       & "GetWordFile: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
@@ -415,16 +438,19 @@ End Function
 Public Sub FuriganaGenByRuby()
 
    On Error GoTo FuriganaGenByRuby_Error
-
+   
+   '対象の文書を開く
    Dim fn As String 
    fn = GetWordFile()
    If Len(fn) <= 0 Then Exit Sub
    Dim target As Document
    Set target = Documents.Open(fn)
+   
+   'ルビを振る
    Dim rng As Range
-   Dim ii As Long 
-   Dim startPos As Long
-   Dim endPos As Long
+   Dim c As Range
+   Dim ii As Long
+   Dim kanji As Boolean 
    For Each rng In target.Range.Words
       'ルビが振られているか
       If rng.Fields.Count < 1 Then 
@@ -434,31 +460,28 @@ Public Sub FuriganaGenByRuby()
 	    Application.Dialogs(wdDialogPhoneticGuide).Show 1
 	 Else
 	    If IsContainKanji(rng.Text, False) Then
-	    End If 
-	    For ii = 1 To rng.Characters.Count
-	       If IsKanji(rng.Characters(ii).Text) Then
-		  startPos = ii
-		  endPos = ii
-		  ii = ii + 1
-		  Do While IsKanji(rng.Characters(ii).Text)
-	             endPos = ii
-	             ii = ii + 1
-	             If ii > rng.Characters.Count Then
-			Exit Do
-		     End If 
+	       '漢字が含まれていたら、1文字ずつ処理
+	       For Each c In rng.Characters
+		  ii = 1
+		  kanji = False 
+		  Do While IsKanji(c.Text)
+		     kanji = True 
+		     c.End = ii
+		     ii = ii + 1
+		     If ii > rng.Characters.Count Then Exit Do
 		  Loop
-		  With rng
-		     .Start = startPos
-		     .End = endPos
-		     .Select
+		  If kanji Then 
+		     c.Select
 		     Application.Dialogs(wdDialogPhoneticGuide).Show 1
-		  End With 
-	       End If
-	    Next 
+		     Exit For 
+		  End If 
+	       Next 
+	    End If 
 	 End If
       End If 
-   Next 
+   Next
    
+   'ルビを付けた文書を新しい文書として保存
    fn = GetNewFileName(fn, "ルビ付")
    If Len(fn) > 0 Then 
       Call target.SaveAs2(fn)
@@ -503,6 +526,7 @@ Private Function IsContainKanji(ByVal s As String, ByVal allKanji As Boolean) As
    
    Exit Function
 IsContainKanji_Error:
+   IsContainKanji = False 
    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
 	       & "IsContainKanji: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
