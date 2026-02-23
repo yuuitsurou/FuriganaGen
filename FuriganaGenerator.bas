@@ -1,35 +1,35 @@
-Attribute VB_Name = "FuriganaGen.bas"
+Attribute VB_Name = "FuriganaGenerator"
 '/////////////////////////////////////////////////////
 '// FuriganaGen.bas
-'// æŒ‡å®šã•ã‚ŒãŸ Word ã®æ–‡æ›¸ã‹ã‚‰ãƒ«ãƒ“ã‚’æŒ¯ã£ãŸæ–‡æ›¸ã‚’ä½œæˆã™ã‚‹
-'// API ã‚’ä½¿ç”¨ã™ã‚‹ä½œæˆ
-'// ç”ŸæˆAI ã§ãƒ«ãƒ“ãƒ†ã‚­ã‚¹ãƒˆ(é’ç©ºæ–‡åº«å½¢å¼)ã‚’ä½œæˆã—ã€ãã‚Œã‚’åˆ©ç”¨ã—ã¦ä½œæˆ
-'// Word ã®æ©Ÿèƒ½ã‚’ä½¿ç”¨ã™ã‚‹ä½œæˆ
+'// w’è‚³‚ê‚½ Word ‚Ì•¶‘‚©‚çƒ‹ƒr‚ğU‚Á‚½•¶‘‚ğì¬‚·‚é
+'// API ‚ğg—p‚·‚éì¬
+'// ¶¬AI ‚Åƒ‹ƒrƒeƒLƒXƒg(Â‹ó•¶ŒÉŒ`®)‚ğì¬‚µA‚»‚ê‚ğ—˜—p‚µ‚Äì¬
+'// Word ‚Ì‹@”\‚ğg—p‚·‚éì¬
 '//
-'// é’ç©ºæ–‡åº«å½¢å¼ã®ãƒ«ãƒ“
+'// Â‹ó•¶ŒÉŒ`®‚Ìƒ‹ƒr
 '// https://www.aozora.gr.jp/aozora-manual/index-input.html
-'// ãƒ«ãƒ“ã¯ã€ãƒ«ãƒ“ã®ä»˜ãæ–‡å­—åˆ—ã®ã‚ã¨ã«ã€ã€Œã€Šã€‹ã€ã§ããã£ã¦å…¥åŠ›ã—ã¾ã™ã€‚ï¼ˆå­¦è¡“è¨˜å·ã®ã€Œâ‰ªâ‰«ã€ã¨æ··åŒã—ã‚„ã™ã„ã®ã§æ³¨æ„ã—ã¦ãã ã•ã„ã€‚ï¼‰
-'// ãƒ«ãƒ“ã®ä»˜ãæ–‡å­—åˆ—ãŒã¯ã˜ã¾ã‚‹å‰ã«ã¯ã€ã€Œï½œã€ã‚’å…¥ã‚Œã¾ã™ã€‚
+'// ƒ‹ƒr‚ÍAƒ‹ƒr‚Ì•t‚­•¶š—ñ‚Ì‚ ‚Æ‚ÉAustv‚Å‚­‚­‚Á‚Ä“ü—Í‚µ‚Ü‚·BiŠwp‹L†‚Ìuáâv‚Æ¬“¯‚µ‚â‚·‚¢‚Ì‚Å’ˆÓ‚µ‚Ä‚­‚¾‚³‚¢Bj
+'// ƒ‹ƒr‚Ì•t‚­•¶š—ñ‚ª‚Í‚¶‚Ü‚é‘O‚É‚ÍAubv‚ğ“ü‚ê‚Ü‚·B
 '//
-'// ã“ã®ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã§ä½¿ç”¨ã—ã¦ã„ã‚‹ Yahoo ã® API
-'// Web Services by Yahoo! JAPAN ï¼ˆhttps://developer.yahoo.co.jp/sitemap/ï¼‰
+'// ‚±‚ÌƒvƒƒOƒ‰ƒ€‚Åg—p‚µ‚Ä‚¢‚é Yahoo ‚Ì API
+'// Web Services by Yahoo! JAPAN ihttps://developer.yahoo.co.jp/sitemap/j
 '//
-'// ã“ã®ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã¯ä»¥ä¸‹ã®è¨˜äº‹ã‚’å‚è€ƒã«ã—ãŸ
-'// Wordã®æ–‡ç« ã«ãƒ«ãƒ“ï¼ˆãµã‚ŠãŒãªï¼‰ã‚’è‡ªå‹•ã§æŒ¯ã‚Œã‚‹ãƒã‚¯ãƒ­
+'// ‚±‚ÌƒvƒƒOƒ‰ƒ€‚ÍˆÈ‰º‚Ì‹L–‚ğQl‚É‚µ‚½
+'// Word‚Ì•¶Í‚Éƒ‹ƒri‚Ó‚è‚ª‚Èj‚ğ©“®‚ÅU‚ê‚éƒ}ƒNƒ
 '// https://kagakucafe.com/2020092311700.html
-'// Wordã®æ–‡ç« ã«ãƒ«ãƒ“ï¼ˆãµã‚ŠãŒãªï¼‰ã‚’è‡ªå‹•ã§æŒ¯ã‚Œã‚‹ãƒã‚¯ãƒ­ ã®è£œè¶³
+'// Word‚Ì•¶Í‚Éƒ‹ƒri‚Ó‚è‚ª‚Èj‚ğ©“®‚ÅU‚ê‚éƒ}ƒNƒ ‚Ì•â‘«
 '// https://kagakucafe.com/2021071316030.html
-'// Wordã§ã®ãƒ«ãƒ“æŒ¯ã‚Šã‚’ä¸€æ‹¬ã§ã§ãã‚‹ã‚ˆã†ã«ã—ãŸè©±
+'// Word‚Å‚Ìƒ‹ƒrU‚è‚ğˆêŠ‡‚Å‚Å‚«‚é‚æ‚¤‚É‚µ‚½˜b
 '// https://qiita.com/enoz_jp/items/0a746cd1c0c021599a1d
-'// Wordã§ã®ãƒ«ãƒ“æŒ¯ã‚Šã‚’ä¸€æ‹¬ã§ã§ãã‚‹ã‚ˆã†ã«ã—ãŸè©±2
+'// Word‚Å‚Ìƒ‹ƒrU‚è‚ğˆêŠ‡‚Å‚Å‚«‚é‚æ‚¤‚É‚µ‚½˜b2
 '// https://qiita.com/enoz_jp/items/915ee4db96ae2097fe02
 '//
-'// ä¸‹è¨˜ã®ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ãŒå¿…è¦
+'// ‰º‹L‚Ìƒ‚ƒWƒ…[ƒ‹‚ª•K—v
 '// JsonConverter.bas (https://github.com/VBA-tools/VBA-JSON)
 '// Dictionary.cls    (https://github.com/VBA-tools/VBA-Dictionary)
 '// ReadFileToSJISTextModule.bas
 '//
-'// é–¢æ•°:
+'// ŠÖ”:
 '// FuriganaGen()
 '// GetApiResult()
 '// IsKanji()
@@ -40,8 +40,8 @@ Attribute VB_Name = "FuriganaGen.bas"
 '// FuriganaGenByRuby()
 '// IsContainKanji()
 '//
-'// å±¥æ­´:
-'// 2026/02/20 ä½œæˆé–‹å§‹
+'// —š—ğ:
+'// 2026/02/20 ì¬ŠJn
 '// 2026/02/23 Ver.0.1
 Option Explicit
 
@@ -50,8 +50,8 @@ Const G_API_URL = "https://jlp.yahooapis.jp/FuriganaService/V2/furigana"
 
 '/////////////////////////////////////////////////////
 '// FuriganaGen()
-'// æŒ‡å®šã•ã‚ŒãŸ Word ã®æ–‡æ›¸ã‹ã‚‰ãƒ†ã‚­ã‚¹ãƒˆã‚’å–ã‚Šå‡ºã—ã€
-'// Yahoo ã®ãµã‚ŠãŒãª Api ã«æŠ•ã’ã¦ãƒ«ãƒ“ä»˜æ–‡æ›¸ã‚’ä½œæˆã™ã‚‹
+'// w’è‚³‚ê‚½ Word ‚Ì•¶‘‚©‚çƒeƒLƒXƒg‚ğæ‚èo‚µA
+'// Yahoo ‚Ì‚Ó‚è‚ª‚È Api ‚É“Š‚°‚Äƒ‹ƒr•t•¶‘‚ğì¬‚·‚é
 '//
 Public Sub FuriganaGen()
 
@@ -65,14 +65,14 @@ Public Sub FuriganaGen()
 
    fn = GetWordFile()
    If Len(fn) <= 0 Then Exit Sub 
-   target = Documents.Open(fn)
+   Set target = Documents.Open(fn)
    allText = target.Range.Text
-   token = InputBox("APIã«æ¸¡ã™ãƒˆãƒ¼ã‚¯ãƒ³ã‚’å…¥åŠ›ã—ã¦ä¸‹ã•ã„ã€‚")
+   token = InputBox("API‚É“n‚·ƒg[ƒNƒ“‚ğ“ü—Í‚µ‚Ä‰º‚³‚¢B")
    If Len(token) <= 0 Then
-      Call MsgBox("ãƒˆãƒ¼ã‚¯ãƒ³ãŒå…¥åŠ›ã•ã‚Œã¾ã›ã‚“ã§ã—ãŸã€‚")
+      Call MsgBox("ƒg[ƒNƒ“‚ª“ü—Í‚³‚ê‚Ü‚¹‚ñ‚Å‚µ‚½B")
       Exit Sub
    End If 
-   json = JsonConverter.ParseJson(GetApiResult(allText, token))
+   Set json = JsonConverter.ParseJson(GetApiResult(allText, token))
 
    Dim w As Object
    Dim sw As Object 
@@ -98,23 +98,23 @@ Public Sub FuriganaGen()
       End If
    Next
 
-   If SetRuby(target rs) Then
+   If SetRuby(target, rs) Then
    Else 
       Exit Sub 
    End If 
    
-   fn = GetNewFileName(fn, "ãƒ«ãƒ“ä»˜")
+   fn = GetNewFileName(fn, "ƒ‹ƒr•t")
    If Len(fn) > 0 Then 
       Call target.SaveAs2(fn)
-      Call MsgBox("ãƒ«ãƒ“ä»˜ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä½œæˆã—ã¾ã—ãŸã€‚" & vbCrLf & "ãƒ•ã‚¡ã‚¤ãƒ«: (" & fn & ")")
+      Call MsgBox("ƒ‹ƒr•tƒtƒ@ƒCƒ‹‚ğì¬‚µ‚Ü‚µ‚½B" & vbCrLf & "ƒtƒ@ƒCƒ‹: (" & fn & ")")
    Else
-      Call MsgBox("ãƒ«ãƒ“ä»˜ã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒä½œæˆã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" & vbCrLf & "ãƒ«ãƒ“ä»˜ãƒ•ã‚¡ã‚¤ãƒ«ã¨åŒåã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒæ—¢ã«å­˜åœ¨ã—ã¾ã™ã€‚")
+      Call MsgBox("ƒ‹ƒr•t‚Ìƒtƒ@ƒCƒ‹‚ªì¬‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" & vbCrLf & "ƒ‹ƒr•tƒtƒ@ƒCƒ‹‚Æ“¯–¼‚Ìƒtƒ@ƒCƒ‹‚ªŠù‚É‘¶İ‚µ‚Ü‚·B")
    End If 
    target.Close
 
    Exit Sub
 FuriganaGen_Error:
-   Call MsgBox("ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚ã‚·ã‚¹ãƒ†ãƒ ç®¡ç†è€…ã«é€£çµ¡ã—ã¦ãã ã•ã„ã€‚" & vbCrLf _
+   Call MsgBox("ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BƒVƒXƒeƒ€ŠÇ—Ò‚É˜A—‚µ‚Ä‚­‚¾‚³‚¢B" & vbCrLf _
 	       & "FuriganaGen: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
    Err.Clear
@@ -123,12 +123,12 @@ End Sub
 
 '/////////////////////////////////////////////////////
 '// GetApiResult(s, token)
-'// æ–‡å­—åˆ—ã¨ API ã®ãƒˆãƒ¼ã‚¯ãƒ³ã‚’å—ã‘å–ã‚Šã€API ã¸æŠ•ã’ã¦ãã®çµæœã‚’è¿”ã™é–¢æ•°
-'// å¼•æ•°:
-'// s: String: å¯¾è±¡ã®æ–‡å­—åˆ—ã€‚4k ã¾ã§ã€‚
-'// token: String: API ã®ãƒˆãƒ¼ã‚¯ãƒ³
-'// è¿”ã‚Šå€¤:
-'// String: API ã®è¿”ã™çµæœ
+'// •¶š—ñ‚Æ API ‚Ìƒg[ƒNƒ“‚ğó‚¯æ‚èAAPI ‚Ö“Š‚°‚Ä‚»‚ÌŒ‹‰Ê‚ğ•Ô‚·ŠÖ”
+'// ˆø”:
+'// s: String: ‘ÎÛ‚Ì•¶š—ñB4k ‚Ü‚ÅB
+'// token: String: API ‚Ìƒg[ƒNƒ“
+'// •Ô‚è’l:
+'// String: API ‚Ì•Ô‚·Œ‹‰Ê
 Private Function GetApiResult(ByVal s As String, ByVal token As String) As String
 
    On Error GoTo GetApiResult_Error
@@ -154,7 +154,7 @@ Private Function GetApiResult(ByVal s As String, ByVal token As String) As Strin
    
    Exit Function
 GetApiResult_Error:
-   Call MsgBox("ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚ã‚·ã‚¹ãƒ†ãƒ ç®¡ç†è€…ã«é€£çµ¡ã—ã¦ãã ã•ã„ã€‚" & vbCrLf _
+   Call MsgBox("ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BƒVƒXƒeƒ€ŠÇ—Ò‚É˜A—‚µ‚Ä‚­‚¾‚³‚¢B" & vbCrLf _
 	       & "GetApiResult: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
    Err.Clear
@@ -163,11 +163,11 @@ End Function
 
 '/////////////////////////////////////////////////////
 '// IsKanji(s)
-'// æ¸¡ã•ã‚ŒãŸæ–‡å­—åˆ—ãŒæ¼¢å­—ã‚’å«ã‚€ã‹ã©ã†ã‹ã‚’ãƒã‚§ãƒƒã‚¯ã™ã‚‹é–¢æ•°
-'// å¼•æ•°:
-'// s: String: æ¤œæŸ»ã™ã‚‹æ–‡å­—åˆ—
-'// è¿”ã‚Šå€¤:
-'// Boolean: å¯¾è±¡ã®æ–‡å­—åˆ—ãŒæ¼¢å­—ã‚’å«ã‚€å ´åˆã¯ True / å«ã¾ãªã‘ã‚Œã° False
+'// “n‚³‚ê‚½•¶š—ñ‚ªŠ¿š‚ğŠÜ‚Ş‚©‚Ç‚¤‚©‚ğƒ`ƒFƒbƒN‚·‚éŠÖ”
+'// ˆø”:
+'// s: String: ŒŸ¸‚·‚é•¶š—ñ
+'// •Ô‚è’l:
+'// Boolean: ‘ÎÛ‚Ì•¶š—ñ‚ªŠ¿š‚ğŠÜ‚Şê‡‚Í True / ŠÜ‚Ü‚È‚¯‚ê‚Î False
 Private Function IsKanji(ByVal s As String) As Boolean
 
    On Error GoTo IsKanji_Error
@@ -177,11 +177,11 @@ Private Function IsKanji(ByVal s As String) As Boolean
    If code < 0 Then
       code = code + 65536
    End If
-   IsKanji = (19968 <= code And code <= 40959) ' Unicodeã®ç¯„å›²ã§æ¼¢å­—ã‹ã©ã†ã‹ã‚’åˆ¤å®š(&H4E00-&H9FFF)
+   IsKanji = (19968 <= code And code <= 40959) ' Unicode‚Ì”ÍˆÍ‚ÅŠ¿š‚©‚Ç‚¤‚©‚ğ”»’è(&H4E00-&H9FFF)
    
    Exit Function
 IsKanji_Error:
-   Call MsgBox("ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚ã‚·ã‚¹ãƒ†ãƒ ç®¡ç†è€…ã«é€£çµ¡ã—ã¦ãã ã•ã„ã€‚" & vbCrLf _
+   Call MsgBox("ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BƒVƒXƒeƒ€ŠÇ—Ò‚É˜A—‚µ‚Ä‚­‚¾‚³‚¢B" & vbCrLf _
 	       & "IsKanji: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
    Err.Clear
@@ -190,15 +190,15 @@ End Function
 
 '/////////////////////////////////////////////////////
 '// SetRuby(rng, rubyList)
-'// æ¸¡ã•ã‚ŒãŸãƒ«ãƒ“ã®ãƒªã‚¹ãƒˆã«å¾“ã£ã¦ã€Word ã®é¸æŠç¯„å›²ã«ãƒ«ãƒ“ã‚’è¨­å®šã™ã‚‹ã€‚
-'// ãƒ«ãƒ“ã®è¨­å®šä¸­ã«ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã®æ–‡å­—åˆ—ãŒè¨˜è¼‰ã•ã‚Œã‚‹ãŸã‚ã€
-'// æ–‡å­—åˆ—ã®é‡è¤‡ã‚’é¿ã‘ã‚‹ãŸã‚ã€ãƒ«ãƒ“ã®ãƒªã‚¹ãƒˆã®æœ€å¾Œã‹ã‚‰å‡¦ç†ã—ã€
-'// æ–‡æ›¸ã®æœ«å°¾ã‹ã‚‰1åº¦ã ã‘æ¤œç´¢ã—ã¦ã€ãƒ’ãƒƒãƒˆã—ãŸæ–‡å­—åˆ—ã«ãƒ«ãƒ“ã‚’ä»˜ã‘ã‚‹ã‚ˆã†ã«ã™ã‚‹ã€‚
-'// å¼•æ•°:
-'// target: Document: Word æ–‡æ›¸
-'// rubyList: Collection: ãƒ«ãƒ“ã®ãƒªã‚¹ãƒˆ (æ–‡å­—åˆ—, ãƒ«ãƒ“)
-'// è¿”ã‚Šå€¤:
-'// Boolean: å‡¦ç†ã®æˆå¦
+'// “n‚³‚ê‚½ƒ‹ƒr‚ÌƒŠƒXƒg‚É]‚Á‚ÄAWord ‚Ì‘I‘ğ”ÍˆÍ‚Éƒ‹ƒr‚ğİ’è‚·‚éB
+'// ƒ‹ƒr‚Ìİ’è’†‚Éƒ^[ƒQƒbƒg‚Ì•¶š—ñ‚ª‹LÚ‚³‚ê‚é‚½‚ßA
+'// •¶š—ñ‚Ìd•¡‚ğ”ğ‚¯‚é‚½‚ßAƒ‹ƒr‚ÌƒŠƒXƒg‚ÌÅŒã‚©‚çˆ—‚µA
+'// •¶‘‚Ì––”ö‚©‚ç1“x‚¾‚¯ŒŸõ‚µ‚ÄAƒqƒbƒg‚µ‚½•¶š—ñ‚Éƒ‹ƒr‚ğ•t‚¯‚é‚æ‚¤‚É‚·‚éB
+'// ˆø”:
+'// target: Document: Word •¶‘
+'// rubyList: Collection: ƒ‹ƒr‚ÌƒŠƒXƒg (•¶š—ñ, ƒ‹ƒr)
+'// •Ô‚è’l:
+'// Boolean: ˆ—‚Ì¬”Û
 Private Function SetRuby(ByRef target As Document, ByRef rubyList As Collection) As Boolean
 
    On Error GoTo SetRuby_Error
@@ -208,26 +208,30 @@ Private Function SetRuby(ByRef target As Document, ByRef rubyList As Collection)
    Dim total As Long
    Dim ii As Long
    Dim ruby As Variant
-   total = rs.Count
+   Dim rng As Range
+   total = rubyList.Count
    For ii = total To 1 Step -1
-      ruby = rs(ii)
-      With target.Range.Find
+      ruby = rubyList(ii)
+      Set rng = target.Range
+      With rng.Find
 	 .Forward = False 
 	 .Wrap = wdFindContinue
-	 If .Execute(FindText:=ruby(0)) Then 
-	    Selection.Range.PhoneticGuide text:=ruby(1)  ', Alignment:=wdPhoneticGuideAlignmentCenter, Raise:=10, FontSize:=5 ' ãƒ«ãƒ“éƒ¨åˆ†
+	 .Execute FindText:=ruby(0)
+	 If .Found Then
+	    rng.PhoneticGuide text:=ruby(1)  ', Alignment:=wdPhoneticGuideAlignmentCenter, Raise:=10, FontSize:=5 ' ƒ‹ƒr•”•ª
 	 Else
 	    SetRuby = False
-	    Call MsgBox("ãƒ«ãƒ“ã‚’ä»˜ã‘ã‚‹ã“ã¨ãŒã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" & vbCrLf & "å¯¾è±¡ã®æ–‡å­—åˆ—:" & ruby(0) & "ã€Š" & ruby(1) & "ã€‹"
+	    Call MsgBox("ƒ‹ƒr‚ğ•t‚¯‚é‚±‚Æ‚ª‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" & vbCrLf & "‘ÎÛ‚Ì•¶š—ñ:" & ruby(0) & "s" & ruby(1) & "t")
 	    Exit Function 
 	 End If 
       End With
+      Set rng = Nothing 
    Next
 
    Exit Function
 SetRuby_Error:
    SetRuby = False 
-   Call MsgBox("ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚ã‚·ã‚¹ãƒ†ãƒ ç®¡ç†è€…ã«é€£çµ¡ã—ã¦ãã ã•ã„ã€‚" & vbCrLf _
+   Call MsgBox("ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BƒVƒXƒeƒ€ŠÇ—Ò‚É˜A—‚µ‚Ä‚­‚¾‚³‚¢B" & vbCrLf _
 	       & "SetRuby: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
    Err.Clear
@@ -235,8 +239,8 @@ End Function
 
 '/////////////////////////////////////////////////////
 '// FuriganaByAozora()
-'// æŒ‡å®šã•ã‚ŒãŸ Word ã®æ–‡æ›¸ã¨ã€ãã®æ–‡æ›¸ã‹ã‚‰ä½œæˆã•ã‚ŒãŸãƒ«ãƒ“ä»˜æ–‡æ›¸(é’ç©ºæ–‡åº«å½¢å¼)ã‹ã‚‰
-'// ãƒ«ãƒ“ä»˜ã® Word ã®æ–‡æ›¸ã‚’ä½œæˆã™ã‚‹
+'// w’è‚³‚ê‚½ Word ‚Ì•¶‘‚ÆA‚»‚Ì•¶‘‚©‚çì¬‚³‚ê‚½ƒ‹ƒr•t•¶‘(Â‹ó•¶ŒÉŒ`®)‚©‚ç
+'// ƒ‹ƒr•t‚Ì Word ‚Ì•¶‘‚ğì¬‚·‚é
 Public Sub FuriganaByAozora()
    
    On Error GoTo FuriganaByAozora_Error
@@ -252,22 +256,21 @@ Public Sub FuriganaByAozora()
    Set fd = Application.FileDialog(msoFileDialogFilePicker)
    With fd
       .AllowMultiSelect = False
-      .Title = "Wordã®æ–‡æ›¸ã®ãƒ«ãƒ“ä»˜ã®ãƒ†ã‚­ã‚¹ãƒˆæ–‡æ›¸(é’ç©ºæ–‡åº«å½¢å¼)é¸æŠã—ã¦ãã ã•ã„ã€‚"
+      .Title = "Word‚Ì•¶‘‚Ìƒ‹ƒr•t‚ÌƒeƒLƒXƒg•¶‘(Â‹ó•¶ŒÉŒ`®)‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢B"
       .Filters.Clear
-      .Filters.Add "ãƒ†ã‚­ã‚¹ãƒˆã®ãƒ•ã‚¡ã‚¤ãƒ«", "*.txt"
-      .InitialFileName initialPath 
+      .Filters.Add "ƒeƒLƒXƒg‚Ìƒtƒ@ƒCƒ‹", "*.txt"
+      .InitialFileName = initialPath 
       If .Show Then
 	 rfn = .SelectedItems(1)
       Else
-	 Call MsgBox("ã‚­ãƒ£ãƒ³ã‚»ãƒ«ã•ã‚Œã¾ã—ãŸã€‚")
+	 Call MsgBox("ƒLƒƒƒ“ƒZƒ‹‚³‚ê‚Ü‚µ‚½B")
       End if
-      End fd
    End With
    If Len(rfn) <= 0 Then Exit Sub
    Dim s As String
    s = ReadFileToSJISText(rfn)
    If Len(s) <= 0 Then
-      Call MsgBox("ãƒ«ãƒ“ä»˜ã®ãƒ†ã‚­ã‚¹ãƒˆæ–‡æ›¸ã‚’èª­ã¿è¾¼ã‚€ã“ã¨ãŒã§ãã¾ã›ã‚“ã§ã—ãŸã€‚")
+      Call MsgBox("ƒ‹ƒr•t‚ÌƒeƒLƒXƒg•¶‘‚ğ“Ç‚İ‚Ş‚±‚Æ‚ª‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B")
       Exit Sub
    End If
 
@@ -277,7 +280,7 @@ Public Sub FuriganaByAozora()
       .Global = True
       .MultiLine = True
       .IgnoreCase = False
-      .Pattern = "ï½œ(.*?)ã€Š(.*?)ã€‹" ' é’ç©ºæ–‡åº«å½¢å¼ã®ãƒ«ãƒ“ã‚’æ¢ã™æ­£è¦è¡¨ç¾
+      .Pattern = "b(.*?)s(.*?)t" ' Â‹ó•¶ŒÉŒ`®‚Ìƒ‹ƒr‚ğ’T‚·³‹K•\Œ»
    End With
    If Not rgx.Test(s) Then
       Exit Sub
@@ -299,25 +302,25 @@ Public Sub FuriganaByAozora()
    Next
 
    Dim target As Document
-   target = Documents.Open(fn)
-   If SetRuby(target rs) Then
+   Set target = Documents.Open(fn)
+   If SetRuby(target, rs) Then
    Else 
       Exit Sub 
    End If 
 
-   fn = GetNewFileName(fn, "ãƒ«ãƒ“ä»˜")
+   fn = GetNewFileName(fn, "ƒ‹ƒr•t")
    If Len(fn) > 0 Then 
       Call target.SaveAs2(fn)
-      Call MsgBox("ãƒ«ãƒ“ä»˜ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä½œæˆã—ã¾ã—ãŸã€‚" & vbCrLf & "ãƒ•ã‚¡ã‚¤ãƒ«: (" & fn & ")")
+      Call MsgBox("ƒ‹ƒr•tƒtƒ@ƒCƒ‹‚ğì¬‚µ‚Ü‚µ‚½B" & vbCrLf & "ƒtƒ@ƒCƒ‹: (" & fn & ")")
    Else
-      Call MsgBox("ãƒ«ãƒ“ä»˜ã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒä½œæˆã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" & vbCrLf & "ãƒ«ãƒ“ä»˜ãƒ•ã‚¡ã‚¤ãƒ«ã¨åŒåã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒæ—¢ã«å­˜åœ¨ã—ã¾ã™ã€‚")
+      Call MsgBox("ƒ‹ƒr•t‚Ìƒtƒ@ƒCƒ‹‚ªì¬‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" & vbCrLf & "ƒ‹ƒr•tƒtƒ@ƒCƒ‹‚Æ“¯–¼‚Ìƒtƒ@ƒCƒ‹‚ªŠù‚É‘¶İ‚µ‚Ü‚·B")
    End If 
 
    target.Close
    
    Exit Sub
 FuriganaByAozora_Error:
-   Call MsgBox("ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚ã‚·ã‚¹ãƒ†ãƒ ç®¡ç†è€…ã«é€£çµ¡ã—ã¦ãã ã•ã„ã€‚" & vbCrLf _
+   Call MsgBox("ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BƒVƒXƒeƒ€ŠÇ—Ò‚É˜A—‚µ‚Ä‚­‚¾‚³‚¢B" & vbCrLf _
 	       & "FuriganaByAozora: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
    Err.Clear
@@ -325,10 +328,10 @@ FuriganaByAozora_Error:
 End Sub
 '/////////////////////////////////////////////////////
 '// GetWordFile()
-'// ãƒ«ãƒ“ã‚’ä»˜ã‘ã‚‹ Word æ–‡æ›¸ã‚’é¸æŠã™ã‚‹é–¢æ•°
-'// å¼•æ•°:
-'// è¿”ã‚Šå€¤:
-'// String: é¸æŠã•ã‚ŒãŸæ–‡æ›¸å(çµ¶å¯¾ãƒ‘ã‚¹)ã€‚é¸æŠã•ã‚Œãªã‹ã£ãŸæ™‚ã¯ç©ºæ–‡å­—åˆ—
+'// ƒ‹ƒr‚ğ•t‚¯‚é Word •¶‘‚ğ‘I‘ğ‚·‚éŠÖ”
+'// ˆø”:
+'// •Ô‚è’l:
+'// String: ‘I‘ğ‚³‚ê‚½•¶‘–¼(â‘ÎƒpƒX)B‘I‘ğ‚³‚ê‚È‚©‚Á‚½‚Í‹ó•¶š—ñ
 Private Function GetWordFile() As String
 
    On Error GoTo GetWordFile_Error
@@ -339,19 +342,19 @@ Private Function GetWordFile() As String
    Set fd = Application.FileDialog(msoFileDialogFilePicker)
    With fd
       .AllowMultiSelect = False
-      .Title = "ãƒ«ãƒ“ã‚’ä»˜ã‘ã‚‹Wordã®æ–‡æ›¸ã‚’é¸æŠã—ã¦ãã ã•ã„ã€‚"
+      .Title = "ƒ‹ƒr‚ğ•t‚¯‚éWord‚Ì•¶‘‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢B"
       .Filters.Clear
-      .Filters.Add "Wordã®ãƒ•ã‚¡ã‚¤ãƒ«", "*.docx"
+      .Filters.Add "Word‚Ìƒtƒ@ƒCƒ‹", "*.docx"
       If .Show Then
 	 GetWordFile = .SelectedItems(1)
       Else
-	 Call MsgBox("ã‚­ãƒ£ãƒ³ã‚»ãƒ«ã•ã‚Œã¾ã—ãŸã€‚")
+	 Call MsgBox("ƒLƒƒƒ“ƒZƒ‹‚³‚ê‚Ü‚µ‚½B")
       End if
-   End fd
+   End With 
    
    Exit Function
 GetWordFile_Error:
-   Call MsgBox("ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚ã‚·ã‚¹ãƒ†ãƒ ç®¡ç†è€…ã«é€£çµ¡ã—ã¦ãã ã•ã„ã€‚" & vbCrLf _
+   Call MsgBox("ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BƒVƒXƒeƒ€ŠÇ—Ò‚É˜A—‚µ‚Ä‚­‚¾‚³‚¢B" & vbCrLf _
 	       & "GetWordFile: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
    Err.Clear
@@ -360,14 +363,14 @@ End Function
 
 '/////////////////////////////////////////////////////
 '// GetNewFileName(fn, suffix)
-'// æ¸¡ã•ã‚ŒãŸãƒ•ã‚¡ã‚¤ãƒ«åã«ä»˜åŠ æ–‡å­—ã‚’ã¤ã‘ãŸãƒ•ã‚¡ã‚¤ãƒ«åã‚’è¿”ã™é–¢æ•°
-'// æ–°ã—ã„ãƒ•ã‚¡ã‚¤ãƒ«åã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã™ã‚‹æ™‚ã¯ã€10 ã¾ã§ã®æ•°å€¤ã‚’ã¤ã‘ã‚‹
-'// å¾“ã£ã¦ã€æ–°ã—ã„ãƒ•ã‚¡ã‚¤ãƒ«åä½œæˆã®ãƒãƒ£ãƒ¬ãƒ³ã‚¸ã¯10å›ã¾ã§ã€‚
-'// å¼•æ•°:
-'// fn: String: æ–°ã—ãã™ã‚‹ãƒ•ã‚¡ã‚¤ãƒ«å(æ‹¡å¼µå­è¾¼ã¿)
-'// suffix: String: ãƒ•ã‚¡ã‚¤ãƒ«åã«è¿½åŠ ã™ã‚‹æ–‡å­—åˆ—
-'// è¿”ã‚Šå€¤:
-'// String: æ–°ã—ã„ãƒ•ã‚¡ã‚¤ãƒ«åã€‚ä½œæˆã§ããªã‹ã£ãŸæ™‚ã¯ç©ºæ–‡å­—åˆ—
+'// “n‚³‚ê‚½ƒtƒ@ƒCƒ‹–¼‚É•t‰Á•¶š‚ğ‚Â‚¯‚½ƒtƒ@ƒCƒ‹–¼‚ğ•Ô‚·ŠÖ”
+'// V‚µ‚¢ƒtƒ@ƒCƒ‹–¼‚Ìƒtƒ@ƒCƒ‹‚ª‘¶İ‚·‚é‚ÍA10 ‚Ü‚Å‚Ì”’l‚ğ‚Â‚¯‚é
+'// ]‚Á‚ÄAV‚µ‚¢ƒtƒ@ƒCƒ‹–¼ì¬‚Ìƒ`ƒƒƒŒƒ“ƒW‚Í10‰ñ‚Ü‚ÅB
+'// ˆø”:
+'// fn: String: V‚µ‚­‚·‚éƒtƒ@ƒCƒ‹–¼(Šg’£q‚İ)
+'// suffix: String: ƒtƒ@ƒCƒ‹–¼‚É’Ç‰Á‚·‚é•¶š—ñ
+'// •Ô‚è’l:
+'// String: V‚µ‚¢ƒtƒ@ƒCƒ‹–¼Bì¬‚Å‚«‚È‚©‚Á‚½‚Í‹ó•¶š—ñ
 Private Function GetNewFileName(ByVal fn As String, ByVal suffix As String) As String
 
    On Error GoTo GetNewFileName_Error
@@ -382,11 +385,11 @@ Private Function GetNewFileName(ByVal fn As String, ByVal suffix As String) As S
    fnOriginal = Left(fn, posOfPriod - 1)
    extOriginal = Right(fn, Len(fn) - posOfPriod + 1)
    GetNewFileName = fnOriginal & suffix & extOriginal
-   If fn <> GetNewFileName And Not fso.Exists(GetNewFileName) Then Exit Function
+   If fn <> GetNewFileName And Not fso.FileExists(GetNewFileName) Then Exit Function
    Dim kaisu As Integer
    For kaisu = 1 To 9
       GetNewFileName = fnOriginal & suffix & CStr(kaisu) & extOriginal
-      If Not fso.Exists(GetNewFileName) Then
+      If Not fso.FileExists(GetNewFileName) Then
 	 Exit Function
       Else
 	 GetNewFileName = ""
@@ -396,7 +399,8 @@ Private Function GetNewFileName(ByVal fn As String, ByVal suffix As String) As S
    Exit Function
 
 GetNewFileName_Error:
-   Call MsgBox("ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚ã‚·ã‚¹ãƒ†ãƒ ç®¡ç†è€…ã«é€£çµ¡ã—ã¦ãã ã•ã„ã€‚" & vbCrLf _
+   GetNewFileName = ""
+   Call MsgBox("ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BƒVƒXƒeƒ€ŠÇ—Ò‚É˜A—‚µ‚Ä‚­‚¾‚³‚¢B" & vbCrLf _
 	       & "GetNewFileName: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
    Err.Clear
@@ -405,9 +409,9 @@ End Function
 
 '/////////////////////////////////////////////////////
 '// FuriganaGenByRuby()
-'// æŒ‡å®šã•ã‚ŒãŸ Word ã®æ–‡æ›¸ã«ã€Word ã®æ©Ÿèƒ½ã§ãƒ«ãƒ“ã‚’ä»˜ã‘ã‚‹ã€‚
-'// Word ã®ãƒã‚°ã®ãŸã‚ã€ãƒ«ãƒ“ãŒæŒ¯ã‚‰ã‚Œãšã€ç„¡é™ãƒ«ãƒ¼ãƒ—ã«ãªã£ã¦ã—ã¾ã†æ¼¢å­—ãŒã‚ã‚‹ã€‚
-'// ãã®å ´åˆã¯ã€ãã®æ¼¢å­—ã«å…ˆã«ãƒ«ãƒ“ã‚’æŒ¯ã£ã¦ãŠã„ã¦ã‹ã‚‰å®Ÿè¡Œã™ã‚‹ã€‚
+'// w’è‚³‚ê‚½ Word ‚Ì•¶‘‚ÉAWord ‚Ì‹@”\‚Åƒ‹ƒr‚ğ•t‚¯‚éB
+'// Word ‚ÌƒoƒO‚Ì‚½‚ßAƒ‹ƒr‚ªU‚ç‚ê‚¸A–³ŒÀƒ‹[ƒv‚É‚È‚Á‚Ä‚µ‚Ü‚¤Š¿š‚ª‚ ‚éB
+'// ‚»‚Ìê‡‚ÍA‚»‚ÌŠ¿š‚Éæ‚Éƒ‹ƒr‚ğU‚Á‚Ä‚¨‚¢‚Ä‚©‚çÀs‚·‚éB
 Public Sub FuriganaGenByRuby()
 
    On Error GoTo FuriganaGenByRuby_Error
@@ -416,49 +420,52 @@ Public Sub FuriganaGenByRuby()
    fn = GetWordFile()
    If Len(fn) <= 0 Then Exit Sub
    Dim target As Document
-   target = Documents.Open(fn)
+   Set target = Documents.Open(fn)
    Dim rng As Range
-   Dim c As Range
+   Dim ii As Long 
    Dim startPos As Long
    Dim endPos As Long
    For Each rng In target.Range.Words
-      'ãƒ«ãƒ“ãŒæŒ¯ã‚‰ã‚Œã¦ã„ã‚‹ã‹
-      If rng.Fields.Count >= 1 Then Next
-      'æ¼¢å­—ãŒå«ã¾ã‚Œã¦ã„ã‚‹ã‹
-      If IsContainKanji(rng.Text, False) Then
-	 For ii = 0 To rng.Characters.Count - 1
-	    If IsKanji(rng.Characters(ii).Range.Text) Then
-	       startPos = ii
-	       endPos = ii
-	       ii = ii + 1
-	       Do While IsKanji(rng.Characters(ii).Range.Text)
-	          endPos = ii
-	          ii = ii + 1
-	          If ii = rng.Characters.Count Then Exit Do
-	       Loop
-	       With rng.Characters
-		  .Start = startPos
-		  .End = endPos
-		  .Select
-		  Application.Dialogs(wdDialogPhoneticGuide).Show 1
-	       End With 
-	    End If
-	 Next 
+      'ƒ‹ƒr‚ªU‚ç‚ê‚Ä‚¢‚é‚©
+      If rng.Fields.Count < 1 Then 
+	 'Š¿š‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚©
+	 If IsContainKanji(rng.Text, False) Then
+	    For ii = 1 To rng.Characters.Count
+	       If IsKanji(rng.Characters(ii).Text) Then
+		  startPos = ii
+		  endPos = ii
+		  ii = ii + 1
+		  Do While IsKanji(rng.Characters(ii).Text)
+	             endPos = ii
+	             ii = ii + 1
+	             If ii > rng.Characters.Count Then
+			Exit Do
+		     End If 
+		  Loop
+		  With rng
+		     .Start = startPos
+		     .End = endPos
+		     .Select
+		     Application.Dialogs(wdDialogPhoneticGuide).Show 1
+		  End With 
+	       End If
+	    Next 
+	 End If
       End If 
-   Next
+   Next 
    
-   fn = GetNewFileName(fn, "ãƒ«ãƒ“ä»˜")
+   fn = GetNewFileName(fn, "ƒ‹ƒr•t")
    If Len(fn) > 0 Then 
       Call target.SaveAs2(fn)
-      Call MsgBox("ãƒ«ãƒ“ä»˜ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä½œæˆã—ã¾ã—ãŸã€‚" & vbCrLf & "ãƒ•ã‚¡ã‚¤ãƒ«: (" & fn & ")")
+      Call MsgBox("ƒ‹ƒr•tƒtƒ@ƒCƒ‹‚ğì¬‚µ‚Ü‚µ‚½B" & vbCrLf & "ƒtƒ@ƒCƒ‹: (" & fn & ")")
    Else
-      Call MsgBox("ãƒ«ãƒ“ä»˜ã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒä½œæˆã§ãã¾ã›ã‚“ã§ã—ãŸã€‚" & vbCrLf & "ãƒ«ãƒ“ä»˜ãƒ•ã‚¡ã‚¤ãƒ«ã¨åŒåã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒæ—¢ã«å­˜åœ¨ã—ã¾ã™ã€‚")
+      Call MsgBox("ƒ‹ƒr•t‚Ìƒtƒ@ƒCƒ‹‚ªì¬‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B" & vbCrLf & "ƒ‹ƒr•tƒtƒ@ƒCƒ‹‚Æ“¯–¼‚Ìƒtƒ@ƒCƒ‹‚ªŠù‚É‘¶İ‚µ‚Ü‚·B")
    End If 
    target.Close
 
    Exit Sub
 FuriganaGenByRuby_Error:
-   Call MsgBox("ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚ã‚·ã‚¹ãƒ†ãƒ ç®¡ç†è€…ã«é€£çµ¡ã—ã¦ãã ã•ã„ã€‚" & vbCrLf _
+   Call MsgBox("ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BƒVƒXƒeƒ€ŠÇ—Ò‚É˜A—‚µ‚Ä‚­‚¾‚³‚¢B" & vbCrLf _
 	       & "FuriganaGenByRuby: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
    Err.Clear
@@ -467,12 +474,12 @@ End Sub
 
 '/////////////////////////////////////////////////////
 '// IsContainKanji(s, allKanji)
-'// æ¸¡ã•ã‚ŒãŸæ–‡å­—åˆ—ã«æ¼¢å­—ãŒå«ã¾ã‚Œã¦ã„ã‚‹ã‹ã©ã†ã‹ã®æ¤œæŸ»
-'// å¼•æ•°:
-'// s: String/: æ¤œæŸ»å¯¾è±¡ã®æ–‡å­—åˆ—
-'// allKanji: Boolean: æ–‡å­—åˆ—å…¨éƒ¨ãŒæ¼¢å­—ã‹ã©ã†ã‹ã‚’åˆ¤å®šã™ã‚‹ãƒ•ãƒ©ã‚° True = å…¨éƒ¨ã‚’åˆ¤å®š / False = ä¸€æ–‡å­—ã§ã‚‚å«ã¾ã‚Œã¦ã„ã‚‹ã‹ã‚’åˆ¤å®š
-'// æˆ»ã‚Šå€¤:
-'// æ¤œæŸ»çµæœ True = å«ã¾ã‚Œã¦ã„ã‚‹ / False = å«ã¾ã‚Œã¦ã„ãªã„
+'// “n‚³‚ê‚½•¶š—ñ‚ÉŠ¿š‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚©‚Ç‚¤‚©‚ÌŒŸ¸
+'// ˆø”:
+'// s: String/: ŒŸ¸‘ÎÛ‚Ì•¶š—ñ
+'// allKanji: Boolean: •¶š—ñ‘S•”‚ªŠ¿š‚©‚Ç‚¤‚©‚ğ”»’è‚·‚éƒtƒ‰ƒO True = ‘S•”‚ğ”»’è / False = ˆê•¶š‚Å‚àŠÜ‚Ü‚ê‚Ä‚¢‚é‚©‚ğ”»’è
+'// –ß‚è’l:
+'// ŒŸ¸Œ‹‰Ê True = ŠÜ‚Ü‚ê‚Ä‚¢‚é / False = ŠÜ‚Ü‚ê‚Ä‚¢‚È‚¢
 Private Function IsContainKanji(ByVal s As String, ByVal allKanji As Boolean) As Boolean
 
    On Error GoTo IsContainKanji_Error
@@ -481,7 +488,7 @@ Private Function IsContainKanji(ByVal s As String, ByVal allKanji As Boolean) As
 
    Dim ii As Long
    For ii = 1 To Len(s)
-      IsContainKanji = IsKanji(Mid(s, ii, 1)
+      IsContainKanji = IsKanji(Mid(s, ii, 1))
       If allKanji Then
 	 If Not IsContainKanji Then Exit For
       Else
@@ -491,7 +498,7 @@ Private Function IsContainKanji(ByVal s As String, ByVal allKanji As Boolean) As
    
    Exit Function
 IsContainKanji_Error:
-   Call MsgBox("ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚ã‚·ã‚¹ãƒ†ãƒ ç®¡ç†è€…ã«é€£çµ¡ã—ã¦ãã ã•ã„ã€‚" & vbCrLf _
+   Call MsgBox("ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BƒVƒXƒeƒ€ŠÇ—Ò‚É˜A—‚µ‚Ä‚­‚¾‚³‚¢B" & vbCrLf _
 	       & "IsContainKanji: " & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
    Err.Clear
