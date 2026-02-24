@@ -221,14 +221,14 @@ Private Function SetRuby(ByRef target As Document, ByRef rubyList As Collection)
       ruby = rubyList(ii)
       '対象の文書を検索
       With rng.Find
-	 .ClearFormatting
+         .ClearFormatting
          .Forward = True
          .Wrap = wdFindStop
-         If .Execute(FindText:=ruby(0)) Then 
+         If .Execute(FindText:=ruby(0)) Then
             'マッチするとレンジの範囲がマッチした部分になるので、
             'そのレンジにルビを付ける
             rng.PhoneticGuide Text:=ruby(1)  ', Alignment:=wdPhoneticGuideAlignmentCenter, Raise:=10, FontSize:=5 ' ルビ部分
-	    Set rng = target.Range(rng.End)
+            Set rng = target.Range(rng.End)
          Else
             SetRuby = False
             Call MsgBox("ルビを付けることができませんでした。" & vbCrLf & "対象の文字列:" & ruby(0) & "《" & ruby(1) & "》")
@@ -459,22 +459,22 @@ Public Sub FuriganaGenByRuby()
             If IsContainKanji(rng.Text, False) Then
                '漢字が含まれていたら、1文字ずつ処理
                For Each c In rng.Characters
-		  If IsKanji(c.Text) Then
-		     Set r = c.Range
-		     ii = c.End
-		     Do
-			ii = ii + 1
-			If ii > rng.Characters.Count Then Exit For
-			If IsKanji(rng.Characters(ii) Then
-			   r.Range.End = ii
-			Else
-			   Exit For 
-			End If 
-		     Loop 
-                     c.Select
+                  If IsKanji(c.Text) Then
+                     Set r = target.Range(c.Start, c.End)
+                     ii = c.End
+                     Do
+                        ii = ii + 1
+                        If ii > rng.Characters.Count Then Exit For
+                        If IsKanji(rng.Characters(ii).Text) Then
+                           r.End = ii
+                        Else
+                           Exit For
+                        End If
+                     Loop
+                     r.Select
                      Application.Dialogs(wdDialogPhoneticGuide).Show 1
                      Exit For
-		  End If 
+                  End If
                Next
             End If
          End If
