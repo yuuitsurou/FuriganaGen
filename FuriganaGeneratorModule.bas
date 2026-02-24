@@ -215,25 +215,20 @@ Private Function SetRuby(ByRef target As Document, ByRef rubyList As Collection)
    Dim ruby As Variant
    Dim rng As Range
    total = rubyList.Count
-   Dim startPos As Long: startPos = target.Range.Start
-   Dim endPos As Long: endPos = target.Range.End
    Set rng = target.Range
-   'ルビのリストを最後から処理する
    For ii = 1 To rubyList.Count
       'ルビを付ける文字列 = 0 / ルビ = 1 の配列を取り出す
       ruby = rubyList(ii)
       '対象の文書を検索
-      rng.Start = startPos
-      rng.End = endPos
       With rng.Find
+	 .ClearFormatting
          .Forward = True
-         .Wrap = wdFindContinue
-         .Execute FindText:=ruby(0)
-         If .Found Then
+         .Wrap = wdFindStop
+         If .Execute(FindText:=ruby(0)) Then 
             'マッチするとレンジの範囲がマッチした部分になるので、
             'そのレンジにルビを付ける
             rng.PhoneticGuide Text:=ruby(1)  ', Alignment:=wdPhoneticGuideAlignmentCenter, Raise:=10, FontSize:=5 ' ルビ部分
-            startPos = rng.End + 1
+	    Set rng = target.Range(rng.End)
          Else
             SetRuby = False
             Call MsgBox("ルビを付けることができませんでした。" & vbCrLf & "対象の文字列:" & ruby(0) & "《" & ruby(1) & "》")
@@ -450,6 +445,7 @@ Public Sub FuriganaGenByRuby()
    'ルビを振る
    Dim rng As Range
    Dim c As Range
+   Dim r As Range
    Dim ii As Long
    Dim kanji As Boolean
    For Each rng In target.Range.Words
@@ -463,19 +459,22 @@ Public Sub FuriganaGenByRuby()
             If IsContainKanji(rng.Text, False) Then
                '漢字が含まれていたら、1文字ずつ処理
                For Each c In rng.Characters
-                  ii = c.End
-                  kanji = False
-                  Do While IsKanji(c.Text)
-                     kanji = True
-                     ii = ii + 1
-                     If ii > rng.Characters.Count Then Exit Do
-                     c.End = ii
-                  Loop
-                  If kanji Then
+		  If IsKanji(c.Text) Then
+		     Set r = c.Range
+		     ii = c.End
+		     Do
+			ii = ii + 1
+			If ii > rng.Characters.Count Then Exit For
+			If IsKanji(rng.Characters(ii) Then
+			   r.Range.End = ii
+			Else
+			   Exit For 
+			End If 
+		     Loop 
                      c.Select
                      Application.Dialogs(wdDialogPhoneticGuide).Show 1
                      Exit For
-                  End If
+		  End If 
                Next
             End If
          End If
