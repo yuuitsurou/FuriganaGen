@@ -463,13 +463,13 @@ Public Sub FuriganaGenByRuby()
             If IsContainKanji(rng.Text, False) Then
                'Š¿Žš‚ªŠÜ‚Ü‚ê‚Ä‚¢‚½‚çA1•¶Žš‚¸‚Âˆ—
                For Each c In rng.Characters
-                  ii = 1
+                  ii = c.End
                   kanji = False
                   Do While IsKanji(c.Text)
                      kanji = True
-                     c.End = ii
                      ii = ii + 1
                      If ii > rng.Characters.Count Then Exit Do
+                     c.End = ii
                   Loop
                   If kanji Then
                      c.Select
