@@ -214,8 +214,11 @@ Private Function SetRuby(ByRef target As Document, ByRef rubyList As Collection)
    Dim ii As Long
    Dim ruby As Variant
    Dim rng As Range
+   Dim lastPos As Long
    total = rubyList.Count
+   Dim operationFlag As Boolean: operationFlag = True
    Set rng = target.Range
+   lastPos = rng.End
    For ii = 1 To rubyList.Count
       'ルビを付ける文字列 = 0 / ルビ = 1 の配列を取り出す
       ruby = rubyList(ii)
@@ -227,15 +230,17 @@ Private Function SetRuby(ByRef target As Document, ByRef rubyList As Collection)
          If .Execute(FindText:=ruby(0)) Then
             'マッチするとレンジの範囲がマッチした部分になるので、
             'そのレンジにルビを付ける
-            rng.PhoneticGuide Text:=ruby(1)  ', Alignment:=wdPhoneticGuideAlignmentCenter, Raise:=10, FontSize:=5 ' ルビ部分
-            Set rng = target.Range(rng.End)
-         Else
-            SetRuby = False
-            Call MsgBox("ルビを付けることができませんでした。" & vbCrLf & "対象の文字列:" & ruby(0) & "《" & ruby(1) & "》")
-            Exit Function
-         End If
+            rng.PhoneticGuide Text:=ruby(1), Alignment:=wdPhoneticGuideAlignmentCenter, Raise:=10, FontSize:=5  ' ルビ部分
+            lastPos = rng.End
+        Else
+            operationFlag = False
+        End If
+        Set rng = Nothing
+        Set rng = target.Range(lastPos)
       End With
    Next
+   
+    SetRuby = operationFlag
 
    Exit Function
 SetRuby_Error:
@@ -462,14 +467,9 @@ Public Sub FuriganaGenByRuby()
                   If IsKanji(c.Text) Then
                      Set r = target.Range(c.Start, c.End)
                      ii = c.End
-                     Do
+                     Do While IsKanji(rng.Characters(ii).Text)
                         ii = ii + 1
                         If ii > rng.Characters.Count Then Exit For
-                        If IsKanji(rng.Characters(ii).Text) Then
-                           r.End = ii
-                        Else
-                           Exit For
-                        End If
                      Loop
                      r.Select
                      Application.Dialogs(wdDialogPhoneticGuide).Show 1
