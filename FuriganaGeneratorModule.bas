@@ -5,6 +5,8 @@ Attribute VB_Name = "FuriganaGeneratorModule"
 '// API を使用する作成
 '// 生成AI でルビテキスト(青空文庫形式)を作成し、それを利用して作成
 '// Word の機能を使用する作成
+'// プログラムでルビを付けた場合、同じ漢字が連続するとルビが正しく表示されない。
+'// その時は、一旦ルビのダイアログを表示させると良い。
 '//
 '// 青空文庫形式のルビ
 '// https://www.aozora.gr.jp/aozora-manual/index-input.html
@@ -76,13 +78,23 @@ Public Sub FuriganaGen()
    End If
    'API からのレスポンスをパース
    Set json = JsonConverter.ParseJson(GetApiResult(allText, token))
-
+   'エラー処理
+   If json.Exists("error") Then
+      Dim er As Object
+      Dim code As String
+      Dim message As String 
+      er = json("Error")
+      code = er("code")
+      message = er("message")
+      Call MsgBox("Yahoo API からエラーが返されました。" & vbCrLf & "コード: " & code & " (" & message & ")")
+      Exit Sub 
+   End If
+   'レスポンスからふりがなのリストを作る
    Dim w As Object
    Dim sw As Object
    Dim rs As New Collection
    Dim surface As String
    Dim furigana As String
-
    For Each w In json("result")("word")
       surface = w("surface")
       If w.Exists("furigana") Then
@@ -100,7 +112,7 @@ Public Sub FuriganaGen()
          End If
       End If
    Next
-   'パースした API のレスポンスを元に対象の文書にルビを付ける
+   'ふりがなのリストを元に対象の文書にルビを付ける
    If SetRuby(target, rs) Then
       '成功
    Else
@@ -230,7 +242,7 @@ Private Function SetRuby(ByRef target As Document, ByRef rubyList As Collection)
          If .Execute(FindText:=ruby(0)) Then
             'マッチするとレンジの範囲がマッチした部分になるので、
             'そのレンジにルビを付ける
-            rng.PhoneticGuide Text:=ruby(1), Alignment:=wdPhoneticGuideAlignmentCenter, Raise:=10, FontSize:=5  ' ルビ部分
+            rng.PhoneticGuide Text:=ruby(1) ',Alignment:=wdPhoneticGuideAlignmentCenter, Raise:=10, FontSize:=5  ' ルビ部分
             lastPos = rng.End
         Else
             operationFlag = False
@@ -467,9 +479,10 @@ Public Sub FuriganaGenByRuby()
                   If IsKanji(c.Text) Then
                      Set r = target.Range(c.Start, c.End)
                      ii = c.End
-                     Do While IsKanji(rng.Characters(ii).Text)
+                     Do While IsKanji(target.Range(ii, ii).Text)
+			Set r = target.Range(c.Start, ii).Text)
                         ii = ii + 1
-                        If ii > rng.Characters.Count Then Exit For
+                        If ii > rng.Characters.Count Then Exit Do
                      Loop
                      r.Select
                      Application.Dialogs(wdDialogPhoneticGuide).Show 1
