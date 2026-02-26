@@ -82,12 +82,12 @@ Public Sub FuriganaGen()
    If json.Exists("error") Then
       Dim er As Object
       Dim code As String
-      Dim message As String 
+      Dim message As String
       er = json("Error")
       code = er("code")
       message = er("message")
       Call MsgBox("Yahoo API からエラーが返されました。" & vbCrLf & "コード: " & code & " (" & message & ")")
-      Exit Sub 
+      Exit Sub
    End If
    'レスポンスからふりがなのリストを作る
    Dim w As Object
@@ -242,7 +242,7 @@ Private Function SetRuby(ByRef target As Document, ByRef rubyList As Collection)
          If .Execute(FindText:=ruby(0)) Then
             'マッチするとレンジの範囲がマッチした部分になるので、
             'そのレンジにルビを付ける
-            rng.PhoneticGuide Text:=ruby(1) ',Alignment:=wdPhoneticGuideAlignmentCenter, Raise:=10, FontSize:=5  ' ルビ部分
+            rng.PhoneticGuide Text:=ruby(1), Alignment:=wdPhoneticGuideAlignmentCenter ', Raise:=10, FontSize:=5  ' ルビ部分
             lastPos = rng.End
         Else
             operationFlag = False
@@ -464,6 +464,8 @@ Public Sub FuriganaGenByRuby()
    Dim c As Range
    Dim r As Range
    Dim ii As Long
+   Dim startPos As Long
+   Dim endPos As Long
    Dim kanji As Boolean
    For Each rng In target.Range.Words
       'ルビが振られているか
@@ -475,14 +477,29 @@ Public Sub FuriganaGenByRuby()
          Else
             If IsContainKanji(rng.Text, False) Then
                '漢字が含まれていたら、1文字ずつ処理
+               ii = 0
+               startPos = ii
+               Do
+                ii = ii + 1
+                If ii > rng.Characters.Count Then
+                    Exit Do
+                End If
+                If IsKanji(rng.Characters(ii).Text) Then
+                    lastPos = rng.Characters(ii).End
+                Else
+                    
+                End If
+               Loop
                For Each c In rng.Characters
                   If IsKanji(c.Text) Then
                      Set r = target.Range(c.Start, c.End)
                      ii = c.End
-                     Do While IsKanji(target.Range(ii, ii).Text)
-			Set r = target.Range(c.Start, ii).Text)
+                     startPos = ii - 1
+                     Do While IsKanji(target.Range(startPos, ii).Text)
+                        Set r = target.Range(c.Start, ii)
                         ii = ii + 1
                         If ii > rng.Characters.Count Then Exit Do
+                        startPos = ii - 1
                      Loop
                      r.Select
                      Application.Dialogs(wdDialogPhoneticGuide).Show 1
