@@ -467,6 +467,7 @@ Public Sub FuriganaGenByRuby()
    Dim startPos As Long
    Dim endPos As Long
    Dim kanji As Boolean
+   Dim kanjiRange As Boolean 
    For Each rng In target.Range.Words
       'ÉãÉrÇ™êUÇÁÇÍÇƒÇ¢ÇÈÇ©
       If rng.Fields.Count < 1 Then
@@ -475,38 +476,32 @@ Public Sub FuriganaGenByRuby()
             rng.Select
             Application.Dialogs(wdDialogPhoneticGuide).Show 1
          Else
-            If IsContainKanji(rng.Text, False) Then
-               'äøéöÇ™ä‹Ç‹ÇÍÇƒÇ¢ÇΩÇÁÅA1ï∂éöÇ∏Ç¬èàóù
-               ii = 0
-               startPos = ii
-               Do
-                ii = ii + 1
-                If ii > rng.Characters.Count Then
-                    Exit Do
-                End If
-                If IsKanji(rng.Characters(ii).Text) Then
-                    lastPos = rng.Characters(ii).End
-                Else
-                    
-                End If
-               Loop
-               For Each c In rng.Characters
-                  If IsKanji(c.Text) Then
-                     Set r = target.Range(c.Start, c.End)
-                     ii = c.End
-                     startPos = ii - 1
-                     Do While IsKanji(target.Range(startPos, ii).Text)
-                        Set r = target.Range(c.Start, ii)
-                        ii = ii + 1
-                        If ii > rng.Characters.Count Then Exit Do
-                        startPos = ii - 1
-                     Loop
-                     r.Select
+	    ii = 0
+	    startPos = rng.Characters(ii).Start
+	    kanjiRange = False 
+	    Do
+	       ii = ii + 1
+	       If ii > rng.Characters.Count Then
+		  Exit Do
+	       End If
+	       If IsKanji(rng.Characters(ii).Text) Then
+		  If Not kanjiRange Then startPos = rng.Characters(ii).Start
+		  endPos = rng.Characters(ii).End
+		  kanjiRange = True 
+	       Else
+		  If kanjiRange Then
+		     Set r = target.Range(startPos, endPos)
+		     r.Select
                      Application.Dialogs(wdDialogPhoneticGuide).Show 1
-                     Exit For
-                  End If
-               Next
-            End If
+		     kanjiRange = False 
+		  End If 
+	       End If
+	    Loop
+	    If kanjiRange Then
+	       Set r = target.Range(startPos, endPos)
+	       r.Select
+	       Application.Dialogs(wdDialogPhoneticGuide).Show 1
+	    End If 
          End If
       End If
    Next
