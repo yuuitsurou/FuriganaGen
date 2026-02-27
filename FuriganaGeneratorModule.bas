@@ -5,8 +5,7 @@ Attribute VB_Name = "FuriganaGeneratorModule"
 '// API を使用する作成
 '// 生成AI でルビテキスト(青空文庫形式)を作成し、それを利用して作成
 '// Word の機能を使用する作成
-'// プログラムでルビを付けた場合、同じ漢字が連続するとルビが正しく表示されない。
-'// その時は、一旦ルビのダイアログを表示させると良い。
+'// Excelの昨日を使用する作成
 '//
 '// 青空文庫形式のルビ
 '// https://www.aozora.gr.jp/aozora-manual/index-input.html
@@ -30,7 +29,6 @@ Attribute VB_Name = "FuriganaGeneratorModule"
 '// JsonConverter.bas (https://github.com/VBA-tools/VBA-JSON)
 '// Dictionary.cls    (https://github.com/VBA-tools/VBA-Dictionary)
 '// ReadFileToSJISTextModule.bas
-'// また、FuriganaGenByRubyWexel を使用する場合は、EXCEL がインストールされている必要がある
 '//
 '// 関数:
 '// FuriganaGen()
@@ -43,6 +41,7 @@ Attribute VB_Name = "FuriganaGeneratorModule"
 '// FuriganaGenByRuby()
 '// IsContainKanji()
 '// FuriganaGenByRubyWexel()
+'//  この関数を使用する場合は Excel のインストールが必要
 '//
 '// 履歴:
 '// 2026/02/20 作成開始
@@ -63,6 +62,7 @@ Private Const adReadLine = -2
 '// FuriganaGen()
 '// 指定された Word の文書からテキストを取り出し、
 '// Yahoo のふりがな Api に投げてルビ付文書を作成する
+'// トークンについては、別途登録し、取得しておく
 '//
 Public Sub FuriganaGen()
 
@@ -71,7 +71,7 @@ Public Sub FuriganaGen()
    Dim token As String
    Dim fn As String
    Dim target As Document
-   Dim allText As String
+   Dim allText As Variant
    Dim json As Object
 
    'ルビを付ける文書を開く
@@ -154,30 +154,37 @@ End Sub
 '// GetApiResult(s, token)
 '// 文字列と API のトークンを受け取り、API へ投げてその結果を返す関数
 '// 引数:
-'// s: String: 対象の文字列。4k まで。
+'// s: Variant: 対象の文字列。4k まで。
 '// token: String: API のトークン
 '// 返り値:
 '// String: API の返す結果
-Private Function GetApiResult(ByVal s As String, ByVal token As String) As String
+Private Function GetApiResult(ByVal s As Variant, ByVal token As String) As String
 
    On Error GoTo GetApiResult_Error
 
    Dim api As New Dictionary
    Dim apiData As New Dictionary
+   Dim j As String
 
    api.Add "id", Format(Now(), "yyyyMMdd-HHmmss")
    api.Add "jsonrpc", "2.0"
    api.Add "method", "jlp.furiganaservice.furigana"
-   apiData.Add "q", s
+   apiData.Add "q", StrConv(s, vbUnicode)
    apiData.Add "grade", G_API_GRADE
    api.Add "params", apiData
+   Dim path As String: path = ThisDocument.path & "\q.txt"
+   Dim o As Object: Set o = CreateObject("Scripting.FileSystemObject")
+   Dim t As Object: Set t = o.CreateTextFile(path, True, True)
+   t.Write s
+   t.Close
+   j = JsonConverter.ConvertToJson(api)
 
    Dim rq As Object: Set rq = CreateObject("MSXML2.XMLHTTP")
    With rq
       .Open "POST", G_API_URL, False
       .SetRequestHeader "Content-Type", "application/json"
       .SetRequestHeader "User-Agent", "Yahoo AppID: " & token
-      .Send JsonConverter.ConvertToJson(api)
+      .Send j
       GetApiResult = .ResponseText
    End With
    
@@ -196,7 +203,6 @@ End Function
 '// 渡された文字列が漢字を含むかどうかをチェックする関数
 '// 引数:
 '// s: String: 検査する文字列
-'// rgx: Object: 正規表現オブジェクト
 '// 返り値:
 '// Boolean: 対象の文字列が漢字を含む場合は True / 含まなければ False
 Private Function IsKanji(ByVal s As String, ByRef rgx As Object) As Boolean
@@ -246,9 +252,9 @@ Private Function SetRuby(ByRef target As Document, ByRef rubyList As Collection)
    Set rng = target.Range
    endPos = rng.End
    For ii = rubyList.Count To 1 Step -1
-      'ルビを付ける文字列 = 0 / ルビ = 1 の配列を取り出す
+      'ルビを付ける文字列 = 0 / ルビ = 1 の配列をリストの末尾より取り出す
       ruby = rubyList(ii)
-      '対象の文書を検索
+      'ルビを付ける文字列を対象の文書の末尾から検索
       With rng.Find
          .ClearFormatting
          .Forward = False
@@ -560,12 +566,11 @@ FuriganaGenByRuby_Error:
 End Sub
 
 '/////////////////////////////////////////////////////
-'// IsContainKanji(s, allKanji, rgx)
+'// IsContainKanji(s, allKanji)
 '// 渡された文字列に漢字が含まれているかどうかの検査
 '// 引数:
 '// s: String/: 検査対象の文字列
 '// allKanji: Boolean: 文字列全部が漢字かどうかを判定するフラグ True = 全部を判定 / False = 一文字でも含まれているかを判定
-'// rgx: Object: 正規表現オブジェクト
 '// 戻り値:
 '// 検査結果 True = 含まれている / False = 含まれていない
 Private Function IsContainKanji(ByVal s As String, ByVal allKanji As Boolean, ByRef rgx As Object) As Boolean
