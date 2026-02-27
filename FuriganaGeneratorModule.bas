@@ -52,6 +52,12 @@ Option Explicit
 Const G_API_GRADE = 1
 Const G_API_URL = "https://jlp.yahooapis.jp/FuriganaService/V2/furigana"
 
+Private Const adTypeBinary = 1
+Private Const adTypeText = 2
+
+Private Const adReadAll = -1
+Private Const adReadLine = -2
+
 '/////////////////////////////////////////////////////
 '// FuriganaGen()
 '// 指定された Word の文書からテキストを取り出し、
@@ -85,7 +91,7 @@ Public Sub FuriganaGen()
       Dim er As Object
       Dim code As String
       Dim message As String
-      er = json("Error")
+      Set er = json("error")
       code = er("code")
       message = er("message")
       Call MsgBox("Yahoo API からエラーが返されました。" & vbCrLf & "コード: " & code & " (" & message & ")")
@@ -97,6 +103,7 @@ Public Sub FuriganaGen()
    Dim rs As New Collection
    Dim surface As String
    Dim furigana As String
+   Dim rgx As Object: Set rgx = CreateObject("VBScript.RegExp")
    For Each w In json("result")("word")
       surface = w("surface")
       If w.Exists("furigana") Then
@@ -104,12 +111,12 @@ Public Sub FuriganaGen()
          If w.Exists("subword") Then
             For Each sw In w("subword")
                surface = sw("surface")
-               If IsKanji(surface) Then
+               If IsKanji(surface, rgx) Then
                   furigana = sw("furigana")
                   rs.Add Array(surface, furigana)
                End If
             Next
-         ElseIf IsKanji(surface) Then
+         ElseIf IsKanji(surface, rgx) Then
             rs.Add Array(surface, furigana)
          End If
       End If
@@ -190,17 +197,18 @@ End Function
 '// s: String: 検査する文字列
 '// 返り値:
 '// Boolean: 対象の文字列が漢字を含む場合は True / 含まなければ False
-Private Function IsKanji(ByVal s As String) As Boolean
+Private Function IsKanji(ByVal s As String, ByRef rgx As Object) As Boolean
 
    On Error GoTo IsKanji_Error
    
    IsKanji = False
-   Dim code As Long
-   code = AscW(s)
-   If code < 0 Then
-      code = code + 65536
-   End If
-   IsKanji = (19968 <= code And code <= 40959) ' Unicodeの範囲で漢字かどうかを判定(&H4E00-&H9FFF)
+   With rgx
+      .Global = True
+      .MultiLine = True
+      .IgnoreCase = False
+      .Pattern = "[一-龠〃々〆〇]"
+      IsKanji = .Test(s)
+   End With
    
    Exit Function
 IsKanji_Error:
@@ -300,7 +308,7 @@ Public Sub FuriganaByAozora()
    If Len(rFn) <= 0 Then Exit Sub
    Dim s As Variant
    Dim fso As Object: Set fso = CreateObject("Scripting.FileSystemObject")
-   If Not fso.FileExists(rfn) Then
+   If Not fso.FileExists(rFn) Then
       Call MsgBox("ファイルが存在しません。" & vbCrLf & fn)
       Exit Sub
    Else
@@ -321,13 +329,12 @@ Public Sub FuriganaByAozora()
       Call MsgBox("ルビ付のテキスト文書を読み込むことができませんでした。")
       Exit Sub
    End If
-   Dim rgx As Object
-   Set rgx = CreateObject("VBScript.RegExp")
+   Dim rgx As Object: Set rgx = CreateObject("VBScript.RegExp")
    With rgx
       .Global = True
       .MultiLine = True
       .IgnoreCase = False
-      .Pattern = "｜([^｜]+)《(.*?)》" ' 青空文庫形式のルビを探す正規表現
+      .Pattern = "｜([^｜]+)《([^》]+)》" '青空文庫形式のルビを探す正規表現
    End With
    If rgx.Test(s) Then
       '成功
@@ -344,10 +351,11 @@ Public Sub FuriganaByAozora()
    Dim furigana As String
    Dim rs As New Collection
    Set ms = rgx.Execute(s)
+   Dim rgx2 As Object: Set rgx2 = CreateObject("VBScript.RegExp")
    For ii = 0 To (ms.Count - 1)
       Set m = ms(ii)
       surface = m.SubMatches(0)
-      If IsKanji(surface) Then
+      If IsKanji(surface, rgx2) Then
          furigana = m.SubMatches(1)
          rs.Add Array(surface, furigana)
       End If
@@ -491,11 +499,12 @@ Public Sub FuriganaGenByRuby()
    Dim endPos As Long
    Dim kanji As Boolean
    Dim kanjiRange As Boolean
+   Dim rgx As Object: Set rgx = CreateObject("VBScript.RegExp")
    For Each rng In target.Range.Words
       'ルビが振られているか
       If rng.Fields.Count < 1 Then
          '全て漢字か
-         If IsContainKanji(rng.Text, True) Then
+         If IsContainKanji(rng.Text, True, rgx) Then
             rng.Select
             Application.Dialogs(wdDialogPhoneticGuide).Show 1
          Else
@@ -507,7 +516,7 @@ Public Sub FuriganaGenByRuby()
                If ii > rng.Characters.Count Then
                   Exit Do
                End If
-               If IsKanji(rng.Characters(ii).Text) Then
+               If IsKanji(rng.Characters(ii).Text, rgx) Then
                   If Not kanjiRange Then startPos = rng.Characters(ii).Start
                   endPos = rng.Characters(ii).End
                   kanjiRange = True
@@ -556,7 +565,7 @@ End Sub
 '// allKanji: Boolean: 文字列全部が漢字かどうかを判定するフラグ True = 全部を判定 / False = 一文字でも含まれているかを判定
 '// 戻り値:
 '// 検査結果 True = 含まれている / False = 含まれていない
-Private Function IsContainKanji(ByVal s As String, ByVal allKanji As Boolean) As Boolean
+Private Function IsContainKanji(ByVal s As String, ByVal allKanji As Boolean, ByRef rgx As Object) As Boolean
 
    On Error GoTo IsContainKanji_Error
 
@@ -564,7 +573,7 @@ Private Function IsContainKanji(ByVal s As String, ByVal allKanji As Boolean) As
 
    Dim ii As Long
    For ii = 1 To Len(s)
-      IsContainKanji = IsKanji(Mid(s, ii, 1))
+      IsContainKanji = IsKanji(Mid(s, ii, 1), rgx)
       If allKanji Then
          If Not IsContainKanji Then Exit For
       Else
@@ -585,9 +594,9 @@ End Function
 '// FuriganaGenByRubyWexel()
 '// 指定された Word の文書に、Excel の機能でルビを付ける。
 '// Microsoft EXCEL がインストールされている必要がある。
-Public Function FuriganaGenByRubyWexel()
+Public Sub FuriganaGenByRubyWexel()
    
-   On Error Resume Next 
+   On Error Resume Next
    Dim excel As Object
    Set excel = CreateObject("Excel.Application")
    If excel Is Nothing Then
@@ -614,40 +623,41 @@ Public Function FuriganaGenByRubyWexel()
    Dim endPos As Long
    Dim kanji As Boolean
    Dim kanjiRange As Boolean
-   Dim furigana As String 
+   Dim furigana As String
+   Dim rgx As Object: Set rgx = CreateObject("VBScript.RegExp")
    For Each rng In target.Range.Words
       'ルビが振られているか
       If rng.Fields.Count < 1 Then
          '全て漢字か
-         If IsContainKanji(rng.Text, True) Then
-	    furigana = StrConv(excel.GetPhonetic(rng.Text), vbHiragana)
-	    Call r.PhoneticGuide(Text:=furigana, Alignment:=wdPhoneticGuideAlignmentCenter)  ' ルビ部分
+         If IsContainKanji(rng.Text, True, rgx) Then
+            furigana = StrConv(excel.GetPhonetic(rng.Text), vbHiragana)
+            Call rng.PhoneticGuide(Text:=furigana, Alignment:=wdPhoneticGuideAlignmentCenter)  ' ルビ部分
          Else
             ii = 0
-            startPos = rng.Characters(ii + 1).Start
+            startPos = rng.Start
             kanjiRange = False
             Do
                ii = ii + 1
                If ii > rng.Characters.Count Then
                   Exit Do
                End If
-               If IsKanji(rng.Characters(ii).Text) Then
-                  If Not kanjiRange Then startPos = rng.Characters(ii).Start
-                  endPos = rng.Characters(ii).End
+               If IsKanji(rng.Characters(ii).Text, rgx) Then
+                  If Not kanjiRange Then startPos = rng.Start
+                  endPos = rng.End
                   kanjiRange = True
                Else
                   If kanjiRange Then
                      Set r = target.Range(startPos, endPos)
-		     furigana = StrConv(excel.GetPhonetic(r.Text), vbHiragana)
-		     Call r.PhoneticGuide(Text:=furigana, Alignment:=wdPhoneticGuideAlignmentCenter)  ' ルビ部分
+                     furigana = StrConv(excel.GetPhonetic(r.Text), vbHiragana)
+                     Call r.PhoneticGuide(Text:=furigana, Alignment:=wdPhoneticGuideAlignmentCenter)  ' ルビ部分
                      kanjiRange = False
                   End If
                End If
             Loop
             If kanjiRange Then
                Set r = target.Range(startPos, endPos)
-	       furigana = StrConv(excel.GetPhonetic(r.Text), vbHiragana)
-	       Call r.PhoneticGuide(Text:=furigana, Alignment:=wdPhoneticGuideAlignmentCenter)  ' ルビ部分
+               furigana = StrConv(excel.GetPhonetic(r.Text), vbHiragana)
+               Call r.PhoneticGuide(Text:=furigana, Alignment:=wdPhoneticGuideAlignmentCenter)  ' ルビ部分
             End If
          End If
       End If
@@ -672,4 +682,4 @@ FuriganaGenByRubyWexel_Error:
                & "FuriganaGenByRubyWexel: " & Err.Number & vbCrLf _
                & "( " & Err.Description & " )")
    Err.Clear
-End Sub 
+End Sub
