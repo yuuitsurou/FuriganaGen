@@ -117,6 +117,7 @@ Public Sub FuriganaGen()
       '成功
    Else
       '失敗
+      Call MsgBox("ルビを完全に付けることができませんでした。ファイルは開いたままになっていますのでご確認ください。")
       Exit Sub
    End If
 
@@ -226,29 +227,31 @@ Private Function SetRuby(ByRef target As Document, ByRef rubyList As Collection)
    Dim ii As Long
    Dim ruby As Variant
    Dim rng As Range
-   Dim lastPos As Long
-   total = rubyList.Count
+   Dim startPos As Long
+   Dim endPos As Long
    Dim operationFlag As Boolean: operationFlag = True
+   total = rubyList.Count
    Set rng = target.Range
-   lastPos = rng.End
-   For ii = 1 To rubyList.Count
+   endPos = rng.End
+   For ii = rubyList.Count To 1 Step -1
       'ルビを付ける文字列 = 0 / ルビ = 1 の配列を取り出す
       ruby = rubyList(ii)
       '対象の文書を検索
       With rng.Find
          .ClearFormatting
-         .Forward = True
+         .Forward = False
          .Wrap = wdFindStop
          If .Execute(FindText:=ruby(0)) Then
             'マッチするとレンジの範囲がマッチした部分になるので、
             'そのレンジにルビを付ける
-            rng.PhoneticGuide Text:=ruby(1), Alignment:=wdPhoneticGuideAlignmentCenter ', Raise:=10, FontSize:=5  ' ルビ部分
-            lastPos = rng.End
+            startPos = rng.Start
+            endPos = rng.End
+            Call rng.PhoneticGuide(Text:=ruby(1), Alignment:=wdPhoneticGuideAlignmentCenter)  ' ルビ部分
         Else
             operationFlag = False
         End If
         Set rng = Nothing
-        Set rng = target.Range(lastPos)
+        Set rng = target.Range(0, startPos)
       End With
    Next
    
@@ -337,6 +340,7 @@ Public Sub FuriganaByAozora()
       '成功
    Else
       '失敗
+      Call MsgBox("ルビを完全に付けることができませんでした。ファイルは開いたままになっていますのでご確認ください。")
       Exit Sub
    End If
 
@@ -467,7 +471,7 @@ Public Sub FuriganaGenByRuby()
    Dim startPos As Long
    Dim endPos As Long
    Dim kanji As Boolean
-   Dim kanjiRange As Boolean 
+   Dim kanjiRange As Boolean
    For Each rng In target.Range.Words
       'ルビが振られているか
       If rng.Fields.Count < 1 Then
@@ -476,32 +480,32 @@ Public Sub FuriganaGenByRuby()
             rng.Select
             Application.Dialogs(wdDialogPhoneticGuide).Show 1
          Else
-	    ii = 0
-	    startPos = rng.Characters(ii).Start
-	    kanjiRange = False 
-	    Do
-	       ii = ii + 1
-	       If ii > rng.Characters.Count Then
-		  Exit Do
-	       End If
-	       If IsKanji(rng.Characters(ii).Text) Then
-		  If Not kanjiRange Then startPos = rng.Characters(ii).Start
-		  endPos = rng.Characters(ii).End
-		  kanjiRange = True 
-	       Else
-		  If kanjiRange Then
-		     Set r = target.Range(startPos, endPos)
-		     r.Select
+            ii = 0
+            startPos = rng.Characters(ii + 1).Start
+            kanjiRange = False
+            Do
+               ii = ii + 1
+               If ii > rng.Characters.Count Then
+                  Exit Do
+               End If
+               If IsKanji(rng.Characters(ii).Text) Then
+                  If Not kanjiRange Then startPos = rng.Characters(ii).Start
+                  endPos = rng.Characters(ii).End
+                  kanjiRange = True
+               Else
+                  If kanjiRange Then
+                     Set r = target.Range(startPos, endPos)
+                     r.Select
                      Application.Dialogs(wdDialogPhoneticGuide).Show 1
-		     kanjiRange = False 
-		  End If 
-	       End If
-	    Loop
-	    If kanjiRange Then
-	       Set r = target.Range(startPos, endPos)
-	       r.Select
-	       Application.Dialogs(wdDialogPhoneticGuide).Show 1
-	    End If 
+                     kanjiRange = False
+                  End If
+               End If
+            Loop
+            If kanjiRange Then
+               Set r = target.Range(startPos, endPos)
+               r.Select
+               Application.Dialogs(wdDialogPhoneticGuide).Show 1
+            End If
          End If
       End If
    Next
