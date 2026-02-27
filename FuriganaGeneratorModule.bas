@@ -30,6 +30,7 @@ Attribute VB_Name = "FuriganaGeneratorModule"
 '// JsonConverter.bas (https://github.com/VBA-tools/VBA-JSON)
 '// Dictionary.cls    (https://github.com/VBA-tools/VBA-Dictionary)
 '// ReadFileToSJISTextModule.bas
+'// また、FuriganaGenByRubyWexel を使用する場合は、EXCEL がインストールされている必要がある
 '//
 '// 関数:
 '// FuriganaGen()
@@ -195,6 +196,7 @@ End Function
 '// 渡された文字列が漢字を含むかどうかをチェックする関数
 '// 引数:
 '// s: String: 検査する文字列
+'// rgx: Object: 正規表現オブジェクト
 '// 返り値:
 '// Boolean: 対象の文字列が漢字を含む場合は True / 含まなければ False
 Private Function IsKanji(ByVal s As String, ByRef rgx As Object) As Boolean
@@ -558,11 +560,12 @@ FuriganaGenByRuby_Error:
 End Sub
 
 '/////////////////////////////////////////////////////
-'// IsContainKanji(s, allKanji)
+'// IsContainKanji(s, allKanji, rgx)
 '// 渡された文字列に漢字が含まれているかどうかの検査
 '// 引数:
 '// s: String/: 検査対象の文字列
 '// allKanji: Boolean: 文字列全部が漢字かどうかを判定するフラグ True = 全部を判定 / False = 一文字でも含まれているかを判定
+'// rgx: Object: 正規表現オブジェクト
 '// 戻り値:
 '// 検査結果 True = 含まれている / False = 含まれていない
 Private Function IsContainKanji(ByVal s As String, ByVal allKanji As Boolean, ByRef rgx As Object) As Boolean
