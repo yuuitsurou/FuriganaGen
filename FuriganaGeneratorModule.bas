@@ -41,10 +41,12 @@ Attribute VB_Name = "FuriganaGeneratorModule"
 '// GetNewFileName()
 '// FuriganaGenByRuby()
 '// IsContainKanji()
+'// FuriganaGenByRubyWexel()
 '//
 '// 履歴:
 '// 2026/02/20 作成開始
 '// 2026/02/23 Ver.0.1
+'// 2026/02/27 ver.0.9 FuriganaGenByRubyWexel 関数を追加
 Option Explicit
 
 Const G_API_GRADE = 1
@@ -296,8 +298,25 @@ Public Sub FuriganaByAozora()
       End If
    End With
    If Len(rFn) <= 0 Then Exit Sub
-   Dim s As String
-   s = ReadFileToSJISText(rFn)
+   Dim s As Variant
+   Dim fso As Object: Set fso = CreateObject("Scripting.FileSystemObject")
+   If Not fso.FileExists(rfn) Then
+      Call MsgBox("ファイルが存在しません。" & vbCrLf & fn)
+      Exit Sub
+   Else
+      Set fso = Nothing
+   End If
+   
+   Dim org_char As String: org_char = MojiCode(rFn)
+   Dim org As Object: Set org = CreateObject("ADODB.Stream")
+   With org
+      .Type = adTypeText
+      .Charset = org_char
+      .Open
+      .LoadFromFile rFn
+      s = .ReadText(-1)
+      .Close
+   End With
    If Len(s) <= 0 Then
       Call MsgBox("ルビ付のテキスト文書を読み込むことができませんでした。")
       Exit Sub
@@ -562,3 +581,95 @@ IsContainKanji_Error:
    Err.Clear
    
 End Function
+'/////////////////////////////////////////////////////
+'// FuriganaGenByRubyWexel()
+'// 指定された Word の文書に、Excel の機能でルビを付ける。
+'// Microsoft EXCEL がインストールされている必要がある。
+Public Function FuriganaGenByRubyWexel()
+   
+   On Error Resume Next 
+   Dim excel As Object
+   Set excel = CreateObject("Excel.Application")
+   If excel Is Nothing Then
+      Call MsgBox("EXCEL を起動することができませんでした。EXCEL が正しくインストールされていることを確認してください")
+      Exit Sub
+   End If
+   On Error GoTo 0
+   
+   On Error GoTo FuriganaGenByRubyWexel_Error
+   
+   '対象の文書を開く
+   Dim fn As String
+   fn = GetWordFile()
+   If Len(fn) <= 0 Then Exit Sub
+   Dim target As Document
+   Set target = Documents.Open(fn)
+   
+   'ルビを振る
+   Dim rng As Range
+   Dim c As Range
+   Dim r As Range
+   Dim ii As Long
+   Dim startPos As Long
+   Dim endPos As Long
+   Dim kanji As Boolean
+   Dim kanjiRange As Boolean
+   Dim furigana As String 
+   For Each rng In target.Range.Words
+      'ルビが振られているか
+      If rng.Fields.Count < 1 Then
+         '全て漢字か
+         If IsContainKanji(rng.Text, True) Then
+	    furigana = StrConv(excel.GetPhonetic(rng.Text), vbHiragana)
+	    Call r.PhoneticGuide(Text:=furigana, Alignment:=wdPhoneticGuideAlignmentCenter)  ' ルビ部分
+         Else
+            ii = 0
+            startPos = rng.Characters(ii + 1).Start
+            kanjiRange = False
+            Do
+               ii = ii + 1
+               If ii > rng.Characters.Count Then
+                  Exit Do
+               End If
+               If IsKanji(rng.Characters(ii).Text) Then
+                  If Not kanjiRange Then startPos = rng.Characters(ii).Start
+                  endPos = rng.Characters(ii).End
+                  kanjiRange = True
+               Else
+                  If kanjiRange Then
+                     Set r = target.Range(startPos, endPos)
+		     furigana = StrConv(excel.GetPhonetic(r.Text), vbHiragana)
+		     Call r.PhoneticGuide(Text:=furigana, Alignment:=wdPhoneticGuideAlignmentCenter)  ' ルビ部分
+                     kanjiRange = False
+                  End If
+               End If
+            Loop
+            If kanjiRange Then
+               Set r = target.Range(startPos, endPos)
+	       furigana = StrConv(excel.GetPhonetic(r.Text), vbHiragana)
+	       Call r.PhoneticGuide(Text:=furigana, Alignment:=wdPhoneticGuideAlignmentCenter)  ' ルビ部分
+            End If
+         End If
+      End If
+   Next
+   
+   excel.Quit
+   Set excel = Nothing
+   
+   'ルビを付けた文書を新しい文書として保存
+   fn = GetNewFileName(fn, "ルビ付")
+   If Len(fn) > 0 Then
+      Call target.SaveAs2(fn)
+      Call MsgBox("ルビ付ファイルを作成しました。" & vbCrLf & "ファイル: (" & fn & ")")
+   Else
+      Call MsgBox("ルビ付のファイルが作成できませんでした。" & vbCrLf & "ルビ付ファイルと同名のファイルが既に存在します。")
+   End If
+   target.Close
+
+   Exit Sub
+FuriganaGenByRubyWexel_Error:
+   Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+               & "FuriganaGenByRubyWexel: " & Err.Number & vbCrLf _
+               & "( " & Err.Description & " )")
+   Err.Clear
+End Sub 
