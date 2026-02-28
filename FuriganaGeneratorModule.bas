@@ -47,6 +47,7 @@ Attribute VB_Name = "FuriganaGeneratorModule"
 '// 2026/02/20 作成開始
 '// 2026/02/23 Ver.0.1
 '// 2026/02/27 ver.0.9 FuriganaGenByRubyWexel 関数を追加
+'// 2026/02/28 Ver.1.0 FuriganaGenByRuby と FuriganaGenRubyWexcel を使えるようにした版
 Option Explicit
 
 Const G_API_GRADE = 1
@@ -158,7 +159,7 @@ End Sub
 '// token: String: API のトークン
 '// 返り値:
 '// String: API の返す結果
-Private Function GetApiResult(ByVal s As Variant, ByVal token As String) As String
+Private Function GetApiResult(ByVal s As String, ByVal token As String) As String
 
    On Error GoTo GetApiResult_Error
 
@@ -169,7 +170,7 @@ Private Function GetApiResult(ByVal s As Variant, ByVal token As String) As Stri
    api.Add "id", Format(Now(), "yyyyMMdd-HHmmss")
    api.Add "jsonrpc", "2.0"
    api.Add "method", "jlp.furiganaservice.furigana"
-   apiData.Add "q", EncodeUTF8(s)
+   apiData.Add "q", s
    apiData.Add "grade", G_API_GRADE
    api.Add "params", apiData
    j = JsonConverter.ConvertToJson(api)
@@ -581,7 +582,7 @@ Private Function IsContainKanji(ByVal s As String, ByVal allKanji As Boolean, By
 
    Dim ii As Long
    For ii = 1 To Len(s)
-      IsContainKanji = IsKanji(Mid(s, ii, 1), rgx)
+      IsContainKanji = IsKanji(Mid$(s, ii, 1), rgx)
       If allKanji Then
          If Not IsContainKanji Then Exit For
       Else
@@ -651,8 +652,8 @@ Public Sub FuriganaGenByRubyWexel()
                   Exit Do
                End If
                If IsKanji(rng.Characters(ii).Text, rgx) Then
-                  If Not kanjiRange Then startPos = rng.Start
-                  endPos = rng.End
+                  If Not kanjiRange Then startPos = rng.Characters(ii).Start
+                  endPos = rng.Characters(ii).End
                   kanjiRange = True
                Else
                   If kanjiRange Then
@@ -692,41 +693,3 @@ FuriganaGenByRubyWexel_Error:
                & "( " & Err.Description & " )")
    Err.Clear
 End Sub
-
-'/////////////////////////////////////////////////////
-'// EncodeUTF8(s)
-'// 渡された文字列をUTF-8でエンコードする関数
-'// 引数:
-'// s: String: 文字列
-'// 戻り値:
-'// Variant: UTF-8でエンコードされた文字列
-Private Function EncodeUTF8(ByVal s As String) As Variant
-
-   On Error GoTo EncodeUTF8_Error
-
-   Dim strm As Object: Set strm = CreateObject("ADODB.Stream")
-   Dim bs() As Byte
-   Dim b As Byte
-   Dim 
-   With strm
-      .Open
-      .Type = adTypeText
-      .Charset = "UTF-8"
-      .WriteText s
-      .Position = 0
-      .Type = adTypeBinary
-      .Position = 3
-      bs = .Read
-      .Close
-   End With
-   For Each b In bs
-      EncodeUTF8 = EncodeUTF8 & "%" & Hex(b)
-   Next
-
-   Exit Function 
-EncodeUTF8_Error:
-   Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
-               & "EncodeUTF8: " & Err.Number & vbCrLf _
-               & "( " & Err.Description & " )")
-   Err.Clear
-End Function 
