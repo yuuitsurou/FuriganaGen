@@ -169,15 +169,15 @@ Private Function GetApiResult(ByVal s As Variant, ByVal token As String) As Stri
    api.Add "id", Format(Now(), "yyyyMMdd-HHmmss")
    api.Add "jsonrpc", "2.0"
    api.Add "method", "jlp.furiganaservice.furigana"
-   apiData.Add "q", StrConv(s, vbUnicode)
+   apiData.Add "q", EncodeUTF8(s)
    apiData.Add "grade", G_API_GRADE
    api.Add "params", apiData
+   j = JsonConverter.ConvertToJson(api)
    Dim path As String: path = ThisDocument.path & "\q.txt"
    Dim o As Object: Set o = CreateObject("Scripting.FileSystemObject")
    Dim t As Object: Set t = o.CreateTextFile(path, True, True)
-   t.Write s
+   t.Write j
    t.Close
-   j = JsonConverter.ConvertToJson(api)
 
    Dim rq As Object: Set rq = CreateObject("MSXML2.XMLHTTP")
    With rq
@@ -598,6 +598,7 @@ IsContainKanji_Error:
    Err.Clear
    
 End Function
+
 '/////////////////////////////////////////////////////
 '// FuriganaGenByRubyWexel()
 '// 指定された Word の文書に、Excel の機能でルビを付ける。
@@ -691,3 +692,41 @@ FuriganaGenByRubyWexel_Error:
                & "( " & Err.Description & " )")
    Err.Clear
 End Sub
+
+'/////////////////////////////////////////////////////
+'// EncodeUTF8(s)
+'// 渡された文字列をUTF-8でエンコードする関数
+'// 引数:
+'// s: String: 文字列
+'// 戻り値:
+'// Variant: UTF-8でエンコードされた文字列
+Private Function EncodeUTF8(ByVal s As String) As Variant
+
+   On Error GoTo EncodeUTF8_Error
+
+   Dim strm As Object: Set strm = CreateObject("ADODB.Stream")
+   Dim bs() As Byte
+   Dim b As Byte
+   Dim 
+   With strm
+      .Open
+      .Type = adTypeText
+      .Charset = "UTF-8"
+      .WriteText s
+      .Position = 0
+      .Type = adTypeBinary
+      .Position = 3
+      bs = .Read
+      .Close
+   End With
+   For Each b In bs
+      EncodeUTF8 = EncodeUTF8 & "%" & Hex(b)
+   Next
+
+   Exit Function 
+EncodeUTF8_Error:
+   Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+               & "EncodeUTF8: " & Err.Number & vbCrLf _
+               & "( " & Err.Description & " )")
+   Err.Clear
+End Function 
